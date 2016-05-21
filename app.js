@@ -4,7 +4,8 @@ var express = require('express')
 var passport = require('passport')
 var Strategy = require('passport-github').Strategy
 
-var path = require('path')
+const path = require('path')
+
 var favicon = require('serve-favicon')
 var logger = require('morgan')
 var cookieParser = require('cookie-parser')
@@ -19,11 +20,18 @@ const streakMem = memoize(streak)
 var routes = require('./routes/index')
 var users = require('./routes/user')
 
+if (!process.env.GITHUB_CLIENT_ID ||
+  !process.env.GITHUB_CLIENT_SECRET ||
+  !process.env.GITHUB_STREAKER_ROOT) {
+  console.error('See readme about the required environment variables.')
+  process.exit(255)
+}
+
 passport.use(
   new Strategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: 'http://localhost:3030/login/github/callback' // was github/return in example
+    callbackURL: path.join(process.env.GITHUB_STREAKER_ROOT, 'login/github/callback')
   },
   function (accessToken, refreshToken, profile, cb) {
     // In this example, the user's Facebook profile is supplied as the user
