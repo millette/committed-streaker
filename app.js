@@ -97,6 +97,11 @@ app.get('/',
     res.render('home', { user: req.user })
   })
 
+app.get('/logout', function (req, res){
+  req.logout()
+  res.redirect('/')
+})
+
 app.get('/login',
   function (req, res) {
     res.render('login')
