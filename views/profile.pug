@@ -1,9 +1,28 @@
 extends layout
 
 block content
-  ul
-    li= user.id
-    li= user.username
-    li= user.displayName
+
+  if user.photos && user.photos.length
+    img(src=user.photos[0].value)
+
+  dl
+    dt ID
+    dd= user.id
+    dt Username
+    dd= user.username
+    dt Display name
+    dd= user.displayName
+    dt On Github since
+    dd= user._json.created_at.split('T')[0]
     if user.emails && user.emails.length
-      li= user.emails[0].value
+      dt Email
+      dd= user.emails[0].value
+
+  if data666
+    pre= JSON.stringify(data, null, ' ')
+
+  if user666
+    pre= JSON.stringify(user, null, ' ')
+
+  if output
+    | !{output}

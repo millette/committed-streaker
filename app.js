@@ -10,6 +10,12 @@ var logger = require('morgan')
 var cookieParser = require('cookie-parser')
 var bodyParser = require('body-parser')
 
+const streak = require('rollodeqc-gh-user-streak')
+const sort = require('lodash.sortby')
+const memoize = require('lodash.memoize')
+
+const streakMem = memoize(streak)
+
 var routes = require('./routes/index')
 var users = require('./routes/user')
 
@@ -104,7 +110,27 @@ app.get('/login/github/callback',
 app.get('/profile',
   require('connect-ensure-login').ensureLoggedIn(),
   function (req, res) {
-    res.render('profile', { user: req.user })
+    streakMem(req.user.username)
+      .then((response) => {
+        const output = []
+        if (response.streaks.length) {
+          const latest = sort(response.streaks, 'begin').reverse()[0]
+          // console.log(chalk.green(`Longest streak in a year: ${response.streaks[0].commits.length} days (${response.streaks[0].commits.reduce((p, c) => p + c)} commits), started ${response.streaks[0].begin}.`))
+          output.push(`Longest streak in a year: ${response.streaks[0].commits.length} days (${response.streaks[0].commits.reduce((p, c) => p + c)} commits), started ${response.streaks[0].begin}.`)
+          if (response.streaks[0].overlaps) {
+            // console.log(chalk.red.bold('Note that the streak may be longer since it started at least 365 days ago.'))
+            output.push('Note that the streak may be longer since it started at least 365 days ago.')
+          }
+          if (latest.begin !== response.streaks[0].begin) {
+            // console.log(`Latest streak: ${latest.commits.length} days (${latest.commits.reduce((p, c) => p + c)} commits), started ${latest.begin}.`)
+            output.push(`Latest streak: ${latest.commits.length} days (${latest.commits.reduce((p, c) => p + c)} commits), started ${latest.begin}.`)
+          }
+        } else {
+          // console.log('No commits in last 365 days.')
+          output.push('No commits in last 365 days.')
+        }
+        res.render('profile', { output: output.map((o) => `<p>${o}</p>`).join('\n'), data: response, user: req.user })
+      })
   })
 
 // catch 404 and forward to error handler

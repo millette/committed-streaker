@@ -12,10 +12,12 @@
     "cookie-parser": "^1.4.2",
     "express": "^4.13.4",
     "express-session": "^1.13.0",
+    "lodash.sortby": "^4.5.0",
     "morgan": "^1.7.0",
     "passport": "^0.3.2",
     "passport-github": "^1.1.0",
     "pug": "^2.0.0-alpha7",
+    "rollodeqc-gh-user-streak": "0.0.3",
     "serve-favicon": "^2.3.0"
   },
   "devDependencies": {
