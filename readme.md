@@ -41,3 +41,10 @@ npm run dev
 ```sh
 npm start
 ```
+
+## Docker
+You can also run the docker version:
+
+```sh
+docker run --rm -it -p 80:3030 -e "GITHUB_CLIENT_ID=YOURHEXCODE" -e "GITHUB_CLIENT_SECRET=YOURHEXCODE" -e "GITHUB_STREAKER_ROOT=http://yourdomain.example.com" millette/committed-streaker:0.1.5
+```
