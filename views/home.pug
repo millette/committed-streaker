@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  if user
+    p= user.username
+    p: a(href="/profile") profile
+  else
+    p Welcome!
+    p: a(href="/login") log in
