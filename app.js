@@ -1,25 +1,5 @@
 'use strict'
 
-var express = require('express')
-var passport = require('passport')
-var Strategy = require('passport-github').Strategy
-
-const path = require('path')
-
-var favicon = require('serve-favicon')
-var logger = require('morgan')
-var cookieParser = require('cookie-parser')
-var bodyParser = require('body-parser')
-
-const streak = require('rollodeqc-gh-user-streak')
-const sort = require('lodash.sortby')
-const memoize = require('lodash.memoize')
-
-const streakMem = memoize(streak)
-
-var routes = require('./routes/index')
-var users = require('./routes/user')
-
 if (!process.env.GITHUB_CLIENT_ID ||
   !process.env.GITHUB_CLIENT_SECRET ||
   !process.env.GITHUB_STREAKER_ROOT) {
@@ -27,11 +7,35 @@ if (!process.env.GITHUB_CLIENT_ID ||
   process.exit(255)
 }
 
+// core
+const path = require('path')
+
+const appRoot = path
+  .join(process.env.GITHUB_STREAKER_ROOT, 'login/github/callback')
+  // FIXME: should really use url.resolve
+  // and suffix / if missing
+  .replace(':/', '://')
+
+// npm
+const express = require('express')
+const passport = require('passport')
+const Strategy = require('passport-github').Strategy
+const favicon = require('serve-favicon')
+const logger = require('morgan')
+const cookieParser = require('cookie-parser')
+const bodyParser = require('body-parser')
+const memoize = require('lodash.memoize')
+const streakMem = memoize(require('rollodeqc-gh-user-streak'))
+const sort = require('lodash.sortby')
+
+const routes = require('./routes/index')
+const users = require('./routes/user')
+
 passport.use(
   new Strategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: path.join(process.env.GITHUB_STREAKER_ROOT, 'login/github/callback')
+    callbackURL: appRoot
   },
   function (accessToken, refreshToken, profile, cb) {
     // In this example, the user's Facebook profile is supplied as the user
@@ -64,32 +68,24 @@ passport.deserializeUser(function (obj, cb) {
   cb(null, obj)
 })
 
-var app = express()
+const app = express()
 
-var env = process.env.NODE_ENV || 'development'
+const env = process.env.NODE_ENV || 'development'
 app.locals.ENV = env
 app.locals.ENV_DEVELOPMENT = env === 'development'
 
 // view engine setup
-
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'pug')
 
 app.use(favicon(path.join(__dirname, 'public/img/favicon.ico')))
 app.use(logger('dev'))
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({
-  extended: true
-}))
+app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cookieParser())
-
 app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }))
-
-// Initialize Passport and restore authentication state, if any, from the
-// session.
 app.use(passport.initialize())
 app.use(passport.session())
-
 app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/i2', routes)
@@ -123,18 +119,14 @@ app.get('/profile',
         const output = []
         if (response.streaks.length) {
           const latest = sort(response.streaks, 'begin').reverse()[0]
-          // console.log(chalk.green(`Longest streak in a year: ${response.streaks[0].commits.length} days (${response.streaks[0].commits.reduce((p, c) => p + c)} commits), started ${response.streaks[0].begin}.`))
           output.push(`Longest streak in a year: ${response.streaks[0].commits.length} days (${response.streaks[0].commits.reduce((p, c) => p + c)} commits), started ${response.streaks[0].begin}.`)
           if (response.streaks[0].overlaps) {
-            // console.log(chalk.red.bold('Note that the streak may be longer since it started at least 365 days ago.'))
             output.push('Note that the streak may be longer since it started at least 365 days ago.')
           }
           if (latest.begin !== response.streaks[0].begin) {
-            // console.log(`Latest streak: ${latest.commits.length} days (${latest.commits.reduce((p, c) => p + c)} commits), started ${latest.begin}.`)
             output.push(`Latest streak: ${latest.commits.length} days (${latest.commits.reduce((p, c) => p + c)} commits), started ${latest.begin}.`)
           }
         } else {
-          // console.log('No commits in last 365 days.')
           output.push('No commits in last 365 days.')
         }
         res.render('profile', { output: output.map((o) => `<p>${o}</p>`).join('\n'), data: response, user: req.user })
@@ -143,7 +135,7 @@ app.get('/profile',
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-  var err = new Error('Not Found')
+  const err = new Error('Not Found')
   err.status = 404
   next(err)
 })

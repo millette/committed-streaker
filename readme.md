@@ -17,6 +17,11 @@ The root URL of your application, for example:
 
 The last two are equivalent, a slash is automatically suffixed.
 
+The full callback URL ends with ```/login/github/callback```. In our examples:
+
+* <https://an.example.com/login/github/callback>
+* <https://an.example.com/bob/login/github/callback>
+
 ## Install
 ```sh
 git clone ...
