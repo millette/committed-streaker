@@ -55,10 +55,12 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cookieParser())
 
+// should resave or saveUninitialized be true?
+// Doesn't seem to make a difference in our case
 app.use(session({
   secret: sessionSecret,
-  resave: true,
-  saveUninitialized: true,
+  resave: false,
+  saveUninitialized: false,
   store: new LevelStore(sessionDb)
 }))
 
@@ -72,17 +74,14 @@ app.use('/login', login)
 app.use('/profile', profile)
 app.use('/logout', logout)
 
-// catch 404 and forward to error handler
 app.use((req, res, next) => {
   const err = new Error('Not Found')
   err.status = 404
   next(err)
 })
 
-// development error handler
-// will print stacktrace
 if (app.get('env') === 'development') {
-  app.use((err, req, res, next) => {
+  app.use((err, req, res) => {
     res.status(err.status || 500)
     res.render('error', {
       message: err.message,
@@ -92,9 +91,7 @@ if (app.get('env') === 'development') {
   })
 }
 
-// production error handler
-// no stacktraces leaked to user
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   res.status(err.status || 500)
   res.render('error', {
     message: err.message,
