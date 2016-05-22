@@ -3,6 +3,9 @@
 // npm
 const router = require('express').Router()
 
-router.get('/', (req, res) => res.render('home', { user: req.user }))
+router.get('/', (req, res) => {
+  req.logout()
+  res.redirect('/')
+})
 
 module.exports = router
