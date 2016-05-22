@@ -20,7 +20,7 @@
     "morgan": "^1.7.0",
     "passport": "^0.3.2",
     "passport-github": "^1.1.0",
-    "pug": "^2.0.0-alpha7",
+    "pug": "^2.0.0-alpha8",
     "rollodeqc-gh-user-streak": "0.0.3",
     "serve-favicon": "^2.3.0"
   },
