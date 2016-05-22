@@ -2,6 +2,6 @@ node_modules/
 public/components
 .sass-cache
 npm-debug.log
-myDb-development
-myDb-production
-myDb
+cdb.js
+db/sessions-development
+db/users-development

@@ -17,7 +17,7 @@ const appRoot = path.join(process.env.GITHUB_STREAKER_ROOT, 'login/github/callba
 
 module.exports = (udb) => {
   const strategist = (accessToken, refreshToken, profile, cb) =>
-    udb.get(profile.username, (notFound, b) => {
+    udb.get(profile.username, (notFound, user) => {
       if (notFound) {
         return streak(profile.username)
           .then((response) => {
@@ -40,7 +40,7 @@ module.exports = (udb) => {
             return cb(null, profile)
           })
       }
-      return cb(null, b)
+      return cb(null, user)
     })
 
   passport.use(new Strategy({
@@ -50,7 +50,7 @@ module.exports = (udb) => {
   }, strategist))
 
   passport.serializeUser((user, cb) => cb(null, user.username))
-  passport.deserializeUser((obj, cb) => udb.get(obj, (a, b) => cb(a, b)))
+  passport.deserializeUser((obj, cb) => udb.get(obj, (err, user) => cb(err, user)))
 
   return passport
 }

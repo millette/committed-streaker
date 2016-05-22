@@ -40,9 +40,9 @@ app.locals.ENV_DEVELOPMENT = env === 'development'
 
 const sessionSecret = ((parts, hashType, inputEncoding, outputEncoding) => {
   const hash = crypto.createHash(hashType)
-  const bla = parts.map((p) => process.env[p])
-  bla.push(env)
-  hash.update(bla.join(''), inputEncoding)
+  parts = parts.map((p) => process.env[p])
+  parts.push(env)
+  hash.update(parts.join(''), inputEncoding)
   return hash.digest(outputEncoding)
 })(['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET', 'GITHUB_STREAKER_ROOT'], 'sha256', 'utf8', 'base64')
 
