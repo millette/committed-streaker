@@ -182,6 +182,15 @@ app.get('/profile',
     })
   })
 
+app.get('/profile/streaks',
+  require('connect-ensure-login').ensureLoggedIn(),
+  function (req, res) {
+    res.render('streaks', {
+      data: req.user.app && req.user.app.response,
+      user: req.user
+    })
+  })
+
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   const err = new Error('Not Found')

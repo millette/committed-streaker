@@ -18,13 +18,8 @@ block content
       dt Email
       dd= user.emails[0].value
 
-  if data666
-    pre= JSON.stringify(data, null, ' ')
-
-  if user666
-    pre= JSON.stringify(user, null, ' ')
-
   if output
     | !{output}
+    p: a(href='/profile/streaks') More
 
   p: a(href='/logout') Logout
