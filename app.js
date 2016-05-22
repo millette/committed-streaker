@@ -24,6 +24,8 @@ const sort = require('lodash.sortby')
 const session = require('express-session')
 const LevelStore = require('express-session-level')(session)
 const level = require('level')
+const ensureLogin = require('connect-ensure-login')
+const espCleanup = require('express-session-passport-cleanup')
 
 // rollodeqc
 const streak = require('rollodeqc-gh-user-streak')
@@ -139,7 +141,7 @@ app.use(session({
   store: new LevelStore(sessionDb)
 }))
 
-app.use(require('express-session-passport-cleanup'))
+app.use(espCleanup)
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(express.static(path.join(__dirname, 'public')))
@@ -153,43 +155,44 @@ app.get('/',
     res.render('home', { user: req.user })
   })
 
-app.get('/logout', function (req, res){
+app.get('/logout', function (req, res) {
   req.logout()
   res.redirect('/')
 })
 
-app.get('/login',
-  function (req, res) {
-    res.render('login')
-  })
+app.get('/login', function (req, res) {
+  res.render('login')
+})
 
-app.get('/login/github',
-  passport.authenticate('github'))
+app.get('/login/github', passport.authenticate('github'))
 
 app.get('/login/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
   function (req, res) {
     res.redirect('/profile')
-  })
+  }
+)
 
 app.get('/profile',
-  require('connect-ensure-login').ensureLoggedIn(),
+  ensureLogin.ensureLoggedIn(),
   function (req, res) {
     res.render('profile', {
       output: req.user.app && req.user.app.output,
       data: req.user.app && req.user.app.response,
       user: req.user
     })
-  })
+  }
+)
 
 app.get('/profile/streaks',
-  require('connect-ensure-login').ensureLoggedIn(),
+  ensureLogin.ensureLoggedIn(),
   function (req, res) {
     res.render('streaks', {
       data: req.user.app && req.user.app.response,
       user: req.user
     })
-  })
+  }
+)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
