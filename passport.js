@@ -16,21 +16,9 @@ const streak = require('rollodeqc-gh-user-streak')
 const appRoot = path.join(process.env.GITHUB_STREAKER_ROOT, 'login/github/callback').replace(':/', '://')
 
 module.exports = (udb) => {
-  // const strategist = (req, accessToken, refreshToken, profile, cb) => {
-  const strategist = (accessToken, refreshToken, profile, cb) => {
-    // In this example, the user's Facebook profile is supplied as the user
-    // record.  In a production-quality application, the Facebook profile should
-    // be associated with a user record in the application's database, which
-    // allows for account linking and authentication with other identity
-    // providers.
-
-    // User.findOrCreate({ githubId: profile.id }, function (err, user) {
-      // return cb(err, user)
-    // })
-
-    udb.get(profile.username, (a, b, c) => {
-      if (a) {
-        // not found
+  const strategist = (accessToken, refreshToken, profile, cb) =>
+    udb.get(profile.username, (notFound, b) => {
+      if (notFound) {
         return streak(profile.username)
           .then((response) => {
             const output = []
@@ -54,32 +42,15 @@ module.exports = (udb) => {
       }
       return cb(null, b)
     })
-  }
 
   passport.use(new Strategy({
-    // passReqToCallback: true,
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
     callbackURL: appRoot
   }, strategist))
 
-  // Configure Passport authenticated session persistence.
-  //
-  // In order to restore authentication state across HTTP requests, Passport needs
-  // to serialize users into and deserialize users out of the session.  In a
-  // production-quality application, this would typically be as simple as
-  // supplying the user ID when serializing, and querying the user record by ID
-  // from the database when deserializing.  However, due to the fact that this
-  // example does not have a database, the complete Twitter profile is serialized
-  // and deserialized.
   passport.serializeUser((user, cb) => cb(null, user.username))
-
-  passport.deserializeUser((obj, cb) => {
-    udb.get(obj, (a, b, c) => {
-      if (a) { return cb(a) }
-      cb(null, b)
-    })
-  })
+  passport.deserializeUser((obj, cb) => udb.get(obj, (a, b) => cb(a, b)))
 
   return passport
 }
