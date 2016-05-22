@@ -9,12 +9,7 @@ if (!process.env.GITHUB_CLIENT_ID ||
 
 // core
 const path = require('path')
-
-const appRoot = path
-  .join(process.env.GITHUB_STREAKER_ROOT, 'login/github/callback')
-  // FIXME: should really use url.resolve
-  // and suffix a / if missing
-  .replace(':/', '://')
+const crypto = require('crypto')
 
 // npm
 const express = require('express')
@@ -25,14 +20,20 @@ const logger = require('morgan')
 const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
 const memoize = require('lodash.memoize')
-const streakMem = memoize(require('rollodeqc-gh-user-streak'))
 const sort = require('lodash.sortby')
 const session = require('express-session')
 const LevelStore = require('express-session-level')(session)
-const crypto = require('crypto')
 
+// rollodeqc
+const streakMem = memoize(require('rollodeqc-gh-user-streak'))
+
+// app
 const routes = require('./routes/index')
 const users = require('./routes/user')
+
+// FIXME: should really use url.resolve
+// and suffix a / if missing
+const appRoot = path.join(process.env.GITHUB_STREAKER_ROOT, 'login/github/callback').replace(':/', '://')
 
 passport.use(
   new Strategy({
@@ -77,33 +78,32 @@ const env = process.env.NODE_ENV || 'development'
 app.locals.ENV = env
 app.locals.ENV_DEVELOPMENT = env === 'development'
 
-const db = require('level')('./myDb-' + env)
+const db = require('level')('./db/myDb-' + env)
 
-const sessionSecret = ((hashType, inputEncoding, outputEncoding) => {
+const sessionSecret = ((parts, hashType, inputEncoding, outputEncoding) => {
   const hash = crypto.createHash(hashType)
-  hash.update(
-    env +
-    process.env.GITHUB_CLIENT_ID +
-    process.env.GITHUB_CLIENT_SECRET +
-    process.env.GITHUB_STREAKER_ROOT,
-    inputEncoding)
+  const bla = parts.map((p) => process.env[p])
+  bla.push(env)
+  hash.update(bla.join(''), inputEncoding)
   return hash.digest(outputEncoding)
-})('sha256', 'utf8', 'base64')
+})(['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET', 'GITHUB_STREAKER_ROOT'], 'sha256', 'utf8', 'base64')
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'pug')
 
 app.use(favicon(path.join(__dirname, 'public/img/favicon.ico')))
-app.use(logger('dev'))
+
+if (env === 'development') { app.use(logger('dev')) }
+
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cookieParser())
 
 app.use(session({
   secret: sessionSecret,
-  resave: true,
-  saveUninitialized: true,
+  resave: false,
+  saveUninitialized: false,
   store: new LevelStore(db)
 }))
 
@@ -137,7 +137,7 @@ app.get('/login/github',
 app.get('/login/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
   function (req, res) {
-    res.redirect('/')
+    res.redirect('/profile')
   })
 
 app.get('/profile',
