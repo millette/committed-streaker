@@ -13,7 +13,7 @@ const path = require('path')
 const appRoot = path
   .join(process.env.GITHUB_STREAKER_ROOT, 'login/github/callback')
   // FIXME: should really use url.resolve
-  // and suffix / if missing
+  // and suffix a / if missing
   .replace(':/', '://')
 
 // npm
@@ -27,6 +27,9 @@ const bodyParser = require('body-parser')
 const memoize = require('lodash.memoize')
 const streakMem = memoize(require('rollodeqc-gh-user-streak'))
 const sort = require('lodash.sortby')
+const session = require('express-session')
+const LevelStore = require('express-session-level')(session)
+const db = require('level')('./myDb')
 
 const routes = require('./routes/index')
 const users = require('./routes/user')
@@ -71,8 +74,11 @@ passport.deserializeUser(function (obj, cb) {
 const app = express()
 
 const env = process.env.NODE_ENV || 'development'
+// console.log('env:', env)
 app.locals.ENV = env
 app.locals.ENV_DEVELOPMENT = env === 'development'
+// console.log('locals:', app.locals)
+// console.log('get():', app.get('env'))
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'))
@@ -83,7 +89,15 @@ app.use(logger('dev'))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cookieParser())
-app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }))
+
+app.use(session({
+  secret: 'keyboard cat',
+  resave: true,
+  saveUninitialized: true,
+  store: new LevelStore(db)
+}))
+
+app.use(require('express-session-passport-cleanup'))
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(express.static(path.join(__dirname, 'public')))
@@ -151,7 +165,9 @@ app.use(function (req, res, next) {
 // will print stacktrace
 
 if (app.get('env') === 'development') {
+  // console.log('GOT DEV')
   app.use(function (err, req, res, next) {
+    // console.log('ERR1:', err)
     res.status(err.status || 500)
     res.render('error', {
       message: err.message,
@@ -164,6 +180,7 @@ if (app.get('env') === 'development') {
 // production error handler
 // no stacktraces leaked to user
 app.use(function (err, req, res, next) {
+  // console.log('ERR2:', err)
   res.status(err.status || 500)
   res.render('error', {
     message: err.message,
