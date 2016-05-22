@@ -23,6 +23,7 @@ const memoize = require('lodash.memoize')
 const sort = require('lodash.sortby')
 const session = require('express-session')
 const LevelStore = require('express-session-level')(session)
+const level = require('level')
 
 // rollodeqc
 const streak = require('rollodeqc-gh-user-streak')
@@ -36,45 +37,51 @@ const users = require('./routes/user')
 // and suffix a / if missing
 const appRoot = path.join(process.env.GITHUB_STREAKER_ROOT, 'login/github/callback').replace(':/', '://')
 
-passport.use(
-  new Strategy({
-    clientID: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: appRoot,
-    passReqToCallback: true
-  },
-  function (req, accessToken, refreshToken, profile, cb) {
-    // In this example, the user's Facebook profile is supplied as the user
-    // record.  In a production-quality application, the Facebook profile should
-    // be associated with a user record in the application's database, which
-    // allows for account linking and authentication with other identity
-    // providers.
+const strategist = (req, accessToken, refreshToken, profile, cb) => {
+  // In this example, the user's Facebook profile is supplied as the user
+  // record.  In a production-quality application, the Facebook profile should
+  // be associated with a user record in the application's database, which
+  // allows for account linking and authentication with other identity
+  // providers.
 
-    // User.findOrCreate({ githubId: profile.id }, function (err, user) {
-      // return cb(err, user)
-    // })
+  // User.findOrCreate({ githubId: profile.id }, function (err, user) {
+    // return cb(err, user)
+  // })
 
-    return streakMem(profile.username)
-      .then((response) => {
-        const output = []
-        if (response.streaks.length) {
-          const latest = sort(response.streaks, 'begin').reverse()[0]
-          output.push(`Longest streak in a year: ${response.streaks[0].commits.length} days (${response.streaks[0].commits.reduce((p, c) => p + c)} commits), started ${response.streaks[0].begin}.`)
-          if (response.streaks[0].overlaps) {
-            output.push('Note that the streak may be longer since it started at least 365 days ago.')
+  userDb.get(profile.username, (a, b, c) => {
+    if (a) {
+      // not found
+      return streak(profile.username)
+        .then((response) => {
+          const output = []
+          if (response.streaks.length) {
+            const latest = sort(response.streaks, 'begin').reverse()[0]
+            output.push(`Longest streak in a year: ${response.streaks[0].commits.length} days (${response.streaks[0].commits.reduce((p, c) => p + c)} commits), started ${response.streaks[0].begin}.`)
+            if (response.streaks[0].overlaps) {
+              output.push('Note that the streak may be longer since it started at least 365 days ago.')
+            }
+            if (latest.begin !== response.streaks[0].begin) {
+              output.push(`Latest streak: ${latest.commits.length} days (${latest.commits.reduce((p, c) => p + c)} commits), started ${latest.begin}.`)
+            }
+          } else {
+            output.push('No commits in last 365 days.')
           }
-          if (latest.begin !== response.streaks[0].begin) {
-            output.push(`Latest streak: ${latest.commits.length} days (${latest.commits.reduce((p, c) => p + c)} commits), started ${latest.begin}.`)
-          }
-        } else {
-          output.push('No commits in last 365 days.')
-        }
 
-        profile.app = { response: response, output: output.map((o) => `<p>${o}</p>`).join('\n') }
-        return cb(null, profile)
-      })
-  }
-))
+          profile.app = { response: response, output: output.map((o) => `<p>${o}</p>`).join('\n') }
+          userDb.put(profile.username, profile)
+          return cb(null, profile)
+        })
+    }
+    return cb(null, b)
+  })
+}
+
+passport.use(new Strategy({
+  clientID: process.env.GITHUB_CLIENT_ID,
+  clientSecret: process.env.GITHUB_CLIENT_SECRET,
+  callbackURL: appRoot,
+  passReqToCallback: true
+}, strategist))
 
 // Configure Passport authenticated session persistence.
 //
@@ -86,11 +93,14 @@ passport.use(
 // example does not have a database, the complete Twitter profile is serialized
 // and deserialized.
 passport.serializeUser(function (user, cb) {
-  cb(null, user)
+  cb(null, user.username)
 })
 
 passport.deserializeUser(function (obj, cb) {
-  cb(null, obj)
+  userDb.get(obj, (a, b, c) => {
+    if (a) { return cb(a) }
+    cb(null, b)
+  })
 })
 
 const app = express()
@@ -99,7 +109,8 @@ const env = process.env.NODE_ENV || 'development'
 app.locals.ENV = env
 app.locals.ENV_DEVELOPMENT = env === 'development'
 
-const db = require('level')('./db/sessions-' + env)
+const sessionDb = level('./db/sessions-' + env)
+const userDb = level('./db/users-' + env, { valueEncoding: 'json' })
 
 const sessionSecret = ((parts, hashType, inputEncoding, outputEncoding) => {
   const hash = crypto.createHash(hashType)
@@ -125,7 +136,7 @@ app.use(session({
   secret: sessionSecret,
   resave: true,
   saveUninitialized: true,
-  store: new LevelStore(db)
+  store: new LevelStore(sessionDb)
 }))
 
 app.use(require('express-session-passport-cleanup'))
