@@ -1,9 +1,9 @@
 /*eslint arrow-parens: [2, "as-needed"]*/
 'use strict'
 import test from 'ava'
-import fn from '../../routes/index'
+import fn from '../../routes/logout'
 
-test('index route, no user', t => {
+test('logout route, no user', t => {
   t.plan(3)
   const router = {
     get: (path, cb) => {
@@ -20,8 +20,9 @@ test('index route, no user', t => {
   fn({ router: router })
 })
 
-test('index route, with user', t => {
+test('logout route, with user', t => {
   t.plan(3)
+
   const router = {
     get: (path, cb) => {
       const req = { user: 'bob' }
