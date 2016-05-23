@@ -13,7 +13,6 @@ const crypto = require('crypto')
 
 // npm
 const express = require('express')
-// const router = require('express').Router()
 const favicon = require('serve-favicon')
 const logger = require('morgan')
 const cookieParser = require('cookie-parser')
@@ -22,6 +21,7 @@ const session = require('express-session')
 const LevelStore = require('express-session-level')(session)
 const level = require('level')
 const espCleanup = require('express-session-passport-cleanup')
+const ensureLogin = require('connect-ensure-login')
 
 // app
 const routes = require('./routes/index')
@@ -72,7 +72,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/', routes({ router: require('express').Router() }))
 app.use('/login', login({ router: require('express').Router(), passport: passport })) // or require('passport') instead?
-app.use('/profile', profile)
+app.use('/profile', profile({ router: require('express').Router(), ensureLogin: ensureLogin }))
 app.use('/logout', logout({ router: require('express').Router() }))
 
 app.use((req, res, next) => {
