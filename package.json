@@ -1,6 +1,17 @@
 {
   "name": "committed-streaker",
   "version": "0.4.0",
+  "description": "We salute the streaker in you.",
+  "license": "AGPL-3.0",
+  "repository": "millette/committed-streaker",
+  "author": {
+    "name": "Robin Millette",
+    "email": "robin@millette.info",
+    "url": "http://robin.millette.info"
+  },
+  "engines": {
+    "node": ">=4"
+  },
   "scripts": {
     "lint": "standard",
     "dev": "standard && gulp",
@@ -8,6 +19,24 @@
     "test": "standard && nyc ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
+  "files": [
+    "app.js",
+    "lib/passport.js",
+    "routes/index.js",
+    "routes/login.js",
+    "routes/logout.js",
+    "routes/profile.js"
+  ],
+  "keywords": [
+    "streaking",
+    "commits",
+    "rollodeqc",
+    "github",
+    "gh",
+    "user",
+    "username",
+    "info"
+  ],
   "dependencies": {
     "body-parser": "^1.15.1",
     "connect-ensure-login": "^0.1.1",
