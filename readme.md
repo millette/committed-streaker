@@ -1,6 +1,6 @@
 # The committed streaker
-[![Coverage Status](https://coveralls.io/repos/github/millette/committed-streaker/badge.svg?branch=tests)](https://coveralls.io/github/millette/committed-streaker?branch=tests)
 [![Build Status](https://travis-ci.org/millette/committed-streaker.svg?branch=tests)](https://travis-ci.org/millette/committed-streaker)
+[![Coverage Status](https://coveralls.io/repos/github/millette/committed-streaker/badge.svg?branch=tests)](https://coveralls.io/github/millette/committed-streaker?branch=tests)
 [![Dependency Status](https://gemnasium.com/badges/github.com/millette/committed-streaker.svg)](https://gemnasium.com/github.com/millette/committed-streaker)
 
 ## Required environment variables
