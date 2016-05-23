@@ -1,8 +1,5 @@
 'use strict'
 
-// const passport = require('passport')
-// const Strategy = require('passport-github').Strategy
-
 if (!process.env.GITHUB_CLIENT_ID ||
   !process.env.GITHUB_CLIENT_SECRET ||
   !process.env.GITHUB_STREAKER_ROOT) {
@@ -12,7 +9,6 @@ if (!process.env.GITHUB_CLIENT_ID ||
 
 // core
 const path = require('path')
-const crypto = require('crypto')
 
 // npm
 const express = require('express')
@@ -27,6 +23,7 @@ const espCleanup = require('express-session-passport-cleanup')
 const ensureLogin = require('connect-ensure-login')
 
 // app
+const utils = require('./lib/utils')
 const routes = require('./routes/index')
 const login = require('./routes/login')
 const profile = require('./routes/profile')
@@ -41,23 +38,11 @@ const passport = require('./lib/passport')({
   Strategy: require('passport-github').Strategy
 }, userDb)
 
-// const passport = require('passport')
-// const Strategy = require('passport-github').Strategy
-
 const app = express()
 
 app.locals.ENV = env
 app.locals.ENV_DEVELOPMENT = env === 'development'
 
-const sessionSecret = ((parts, hashType, inputEncoding, outputEncoding) => {
-  const hash = crypto.createHash(hashType)
-  parts = parts.map((p) => process.env[p])
-  parts.push(env)
-  hash.update(parts.join(''), inputEncoding)
-  return hash.digest(outputEncoding)
-})(['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET', 'GITHUB_STREAKER_ROOT'], 'sha256', 'utf8', 'base64')
-
-// view engine setup
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'pug')
 app.use(favicon(path.join(__dirname, 'public/img/favicon.ico')))
@@ -69,7 +54,7 @@ app.use(cookieParser())
 // should resave or saveUninitialized be true?
 // Doesn't seem to make a difference in our case
 app.use(session({
-  secret: sessionSecret,
+  secret: utils.sessionSecret(env),
   resave: false,
   saveUninitialized: false,
   store: new LevelStore(sessionDb)
