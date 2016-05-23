@@ -5,6 +5,7 @@ import fn from '../../routes/index'
 
 test('index route, no user', t => {
   t.plan(3)
+
   const router = {
     get: (path, cb) => {
       const res = {
@@ -22,6 +23,7 @@ test('index route, no user', t => {
 
 test('index route, with user', t => {
   t.plan(3)
+
   const router = {
     get: (path, cb) => {
       const req = { user: 'bob' }

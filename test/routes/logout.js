@@ -3,34 +3,21 @@
 import test from 'ava'
 import fn from '../../routes/logout'
 
-test('logout route, no user', t => {
+test('logout route', t => {
   t.plan(3)
+
   const router = {
     get: (path, cb) => {
-      const res = {
-        render: (tpl, vals) => {
-          t.is(path, '/')
-          t.is(tpl, 'home')
-          t.falsy(vals && vals.user)
+      const req = {
+        logout: () => {
+          t.truthy('logout called')
         }
       }
-      cb(false, res)
-    }
-  }
-  fn({ router: router })
-})
 
-test('logout route, with user', t => {
-  t.plan(3)
-
-  const router = {
-    get: (path, cb) => {
-      const req = { user: 'bob' }
       const res = {
-        render: (tpl, vals) => {
+        redirect: path => {
+          t.truthy('redirect called')
           t.is(path, '/')
-          t.is(tpl, 'home')
-          t.truthy(vals.user)
         }
       }
       cb(req, res)
