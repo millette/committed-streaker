@@ -58,6 +58,7 @@
   },
   "devDependencies": {
     "ava": "^0.14.0",
+    "coveralls": "^2.11.9",
     "gulp": "^3.9.1",
     "gulp-livereload": "^3.8.1",
     "gulp-nodemon": "^2.0.7",
