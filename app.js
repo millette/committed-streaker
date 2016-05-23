@@ -13,6 +13,7 @@ const crypto = require('crypto')
 
 // npm
 const express = require('express')
+const router = require('express').Router()
 const favicon = require('serve-favicon')
 const logger = require('morgan')
 const cookieParser = require('cookie-parser')
@@ -69,7 +70,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 app.use(express.static(path.join(__dirname, 'public')))
 
-app.use('/', routes)
+app.use('/', routes({ router: router }))
 app.use('/login', login)
 app.use('/profile', profile)
 app.use('/logout', logout)

@@ -1,8 +1,6 @@
 'use strict'
 
-// npm
-const router = require('express').Router()
-
-router.get('/', (req, res) => res.render('home', { user: req.user }))
-
-module.exports = router
+module.exports = (services) => {
+  services.router.get('/', (req, res) => res.render('home', { user: req.user }))
+  return services.router
+}
