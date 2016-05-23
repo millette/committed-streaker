@@ -44,6 +44,10 @@ npm run dev
 npm start
 ```
 
+## Testing
+While I've begun to add some unit tests, I'm still working out
+the best ways to code an express app for testability.
+
 ## Docker
 You can also run the docker version:
 
