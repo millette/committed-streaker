@@ -1,14 +1,20 @@
 'use strict'
 
 // npm
-const passport = require('passport')
-const router = require('express').Router()
+const debug = require('debug')('app')
 
-router.get('/', (req, res) => { res.render('login') })
-router.get('/github', passport.authenticate('github'))
-router.get('/github/callback',
-  passport.authenticate('github', { failureRedirect: '/login' }),
-  (req, res) => res.redirect('/profile')
-)
-
-module.exports = router
+module.exports = (services) => {
+  services.router.get('/', (req, res) => {
+    debug('LOGIN')
+    res.render('login')
+  })
+  services.router.get('/github', services.passport.authenticate('github'))
+  services.router.get('/github/callback',
+    services.passport.authenticate('github', { failureRedirect: '/login' }),
+    (req, res) => {
+      debug('LOGIN REDIRECT')
+      res.redirect('/profile')
+    }
+  )
+  return services.router
+}

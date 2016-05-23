@@ -71,7 +71,7 @@ app.use(passport.session())
 app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/', routes({ router: require('express').Router() }))
-app.use('/login', login)
+app.use('/login', login({ router: require('express').Router(), passport: passport })) // or require('passport') instead?
 app.use('/profile', profile)
 app.use('/logout', logout({ router: require('express').Router() }))
 
