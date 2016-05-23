@@ -73,7 +73,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use('/', routes({ router: router }))
 app.use('/login', login)
 app.use('/profile', profile)
-app.use('/logout', logout)
+app.use('/logout', logout({ router: router }))
 
 app.use((req, res, next) => {
   const err = new Error('Not Found')
