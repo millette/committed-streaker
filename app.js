@@ -1,5 +1,8 @@
 'use strict'
 
+// const passport = require('passport')
+// const Strategy = require('passport-github').Strategy
+
 if (!process.env.GITHUB_CLIENT_ID ||
   !process.env.GITHUB_CLIENT_SECRET ||
   !process.env.GITHUB_STREAKER_ROOT) {
@@ -32,7 +35,14 @@ const logout = require('./routes/logout')
 const env = process.env.NODE_ENV || 'development'
 const sessionDb = level('./db/sessions-' + env)
 const userDb = level('./db/users-' + env, { valueEncoding: 'json' })
-const passport = require('./passport')(userDb)
+const passport = require('./lib/passport')({
+  streak: require('rollodeqc-gh-user-streak'),
+  passport: require('passport'),
+  Strategy: require('passport-github').Strategy
+}, userDb)
+
+// const passport = require('passport')
+// const Strategy = require('passport-github').Strategy
 
 const app = express()
 
