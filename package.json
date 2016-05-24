@@ -13,6 +13,7 @@
     "node": ">=4"
   },
   "scripts": {
+    "bower": "bower install",
     "postinstall": "gulp sass && bower install",
     "css": "gulp sass",
     "lint": "standard",
