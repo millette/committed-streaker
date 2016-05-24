@@ -13,9 +13,10 @@
     "node": ">=4"
   },
   "scripts": {
+    "css": "gulp sass",
     "lint": "standard",
     "dev": "standard && gulp",
-    "start": "NODE_ENV=production node ./bin/www",
+    "start": "standard && node ./bin/www",
     "test": "standard && nyc ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
