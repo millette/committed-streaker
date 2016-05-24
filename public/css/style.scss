@@ -2,7 +2,20 @@
 
 @import 'defaults';
 
+#content {
+  margin: 0 1rem;
+}
+
 .row.centered > .column > span {
   text-align: center;
   display: block;
+}
+
+.reference-note {
+  vertical-align: top;
+  padding: 0 0.25rem;
+}
+
+footer {
+  margin-top: 2rem;
 }

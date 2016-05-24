@@ -8,3 +8,4 @@ db/users-development
 .nyc_output
 builder
 public/css/style.css
+wrk.js

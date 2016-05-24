@@ -1,9 +1,35 @@
 extends layout
 
 block content
-  if user
-    p= user.username
-    p: a(href="/profile") profile
-  else
-    p Welcome!
-    p: a(href="/login/github") Login with Github
+  .row
+    .column.medium-6
+      h1 Bienvenue!
+      p.lead.
+        Encouragé par votre nombre de jours consécutifs de programmation?
+        Déçu que ce soit disparu de votre profil Github<a href="/a-propos" class="reference-note">*</a> ?
+        Voici comment retrouver vos stats!
+
+      if user
+        a(href="/profile/as-github").button.success Voir vos stats
+      else
+        p.
+          Connectez-vous avec votre compte Github pour obtenir instantannément
+          vos statistiques.
+
+        a(href="/login/github").button Se connecter avec Github
+
+    .column.medium-6
+      h1 Welcome!
+      p.lead.
+        <i>[EN]</i> Encouragé par votre nombre de jours consécutifs de programmation?
+        Déçu que ce soit disparu de votre profil Github<a href="/about" class="reference-note">*</a> ?
+        Voici comment retrouver vos stats!
+
+      if user
+        a(href="/profile/as-github").button.success See your stats
+      else
+        p.
+          <i>[EN]</i> Connectez-vous avec votre compte Github pour obtenir instantannément
+          vos statistiques.
+
+        a(href="/login/github").button Login with Github

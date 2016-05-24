@@ -15,17 +15,23 @@ html(lang='en')
       div
         .top-bar-left
           ul.menu
-            li: a(href="#") About
-            li: a(href="#") Contact us
+            li: a(href="/a-propos") À propos
+            li: a(href="/about") About
 
         .top-bar-right
           ul.menu
-            li: a(href="#") RoLLodeQc
             if user
               li: a(href="/profile/as-github")= user.displayName || user.username
               li: a(href="/logout") Logout
             else
               li: a(href="/login/github") Login with github
 
-    div.row.column
-      block content
+    #content
+      div.row.column
+        block content
+
+      div.row.column
+        footer
+          p.text-center.
+            Un service du <a href="http://www.rollodeqc.com/">RoLLodeQc</a>
+            &copy; 2016 <a href="http://robin.millette.info/">Robin Millette</a>
