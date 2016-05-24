@@ -13,6 +13,7 @@
     "node": ">=4"
   },
   "scripts": {
+    "postinstall": "gulp sass && bower install",
     "css": "gulp sass",
     "lint": "standard",
     "docker": "standard && gulp sass && ava && docker build -t millette/committed-streaker:$npm_package_version .",
@@ -60,6 +61,7 @@
   },
   "devDependencies": {
     "ava": "^0.14.0",
+    "bower": "^1.7.9",
     "coveralls": "^2.11.9",
     "gulp": "^3.9.1",
     "gulp-livereload": "^3.8.1",

@@ -1,22 +1,24 @@
 extends layout
 
 block content
-  div
-    div
+  div.row.centered
+    div.column.small-4
       span Contributions in the last year
-      span= `${data.commits} total`
+      span.stat= `${data.commits} total`
       span May 11, 2015 – May 11, 2016
 
-    div
+    div.column.small-4
       span Longest streak
-        span= `${data.streaks[0].commits.length} days`
-        span March 30 – May 11
+      span.stat= `${data.streaks[0].commits.length} days`
+      span March 30 – May 11
 
-    div
+    div.column.small-4
       span Current streak
-        span= `${data.streaks[0].commits.length} days`
-        span March 30 – May 11
+      span.stat= `${data.streaks[0].commits.length} days`
+      span March 30 – May 11
 
-  p: a(href='/profile/streaks') More
+  div.row.column
+    p: a(href='/profile/streaks') More
 
-  p: a(href='/logout') Logout
+  div.row.column
+    p: a(href='/logout') Logout
