@@ -18,4 +18,14 @@
 
 footer {
   margin-top: 2rem;
+  padding: 1rem 2rem 0;
+  border-top: thin solid map-get($foundation-palette, primary);
+}
+
+.expanded.button-group > a{
+  line-height: 1.15rem;
+}
+
+small.tiny {
+  font-size: smaller;
 }
