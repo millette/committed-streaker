@@ -16,7 +16,7 @@
     "postinstall": "gulp sass && bower install",
     "css": "gulp sass",
     "lint": "standard",
-    "docker": "standard && gulp sass && ava && docker build -t millette/committed-streaker:$npm_package_version .",
+    "docker": "docker build -t millette/committed-streaker:$npm_package_version .",
     "dev": "standard && gulp",
     "start": "standard && gulp sass && node ./bin/www",
     "test": "standard && nyc ava",
