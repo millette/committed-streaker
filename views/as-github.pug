@@ -1,0 +1,22 @@
+extends layout
+
+block content
+  div
+    div
+      span Contributions in the last year
+      span= `${data.commits} total`
+      span May 11, 2015 – May 11, 2016
+
+    div
+      span Longest streak
+        span= `${data.streaks[0].commits.length} days`
+        span March 30 – May 11
+
+    div
+      span Current streak
+        span= `${data.streaks[0].commits.length} days`
+        span March 30 – May 11
+
+  p: a(href='/profile/streaks') More
+
+  p: a(href='/logout') Logout

@@ -16,6 +16,18 @@ module.exports = (services) => {
     }
   )
 
+  services.router.get('/as-github',
+    services.ensureLogin.ensureLoggedIn(),
+    (req, res) => {
+      debug('AS-GITHUB RENDER')
+      res.render('as-github', {
+        output: req.user.app && req.user.app.output,
+        data: req.user.app && req.user.app.response,
+        user: req.user
+      })
+    }
+  )
+
   services.router.get('/streaks',
     services.ensureLogin.ensureLoggedIn(),
     (req, res) => {

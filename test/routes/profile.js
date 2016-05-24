@@ -4,7 +4,7 @@ import test from 'ava'
 import fn from '../../routes/profile'
 
 test('profile route', t => {
-  t.plan(10)
+  t.plan(15)
 
   const router = {
     get: (path, fn, cb) => {
@@ -16,6 +16,26 @@ test('profile route', t => {
           res = {
             render: (tpl, vals) => {
               t.is(tpl, 'profile')
+              t.truthy(vals && vals.output)
+              t.truthy(vals && vals.data)
+              t.truthy(vals && vals.user)
+            }
+          }
+
+          req = {
+            user: {
+              app: {
+                output: 'output',
+                response: 'response'
+              }
+            }
+          }
+          break
+
+        case '/as-github':
+          res = {
+            render: (tpl, vals) => {
+              t.is(tpl, 'as-github')
               t.truthy(vals && vals.output)
               t.truthy(vals && vals.data)
               t.truthy(vals && vals.user)
