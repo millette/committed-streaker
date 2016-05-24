@@ -7,3 +7,4 @@ db/sessions-development
 db/users-development
 .nyc_output
 builder
+public/css/style.css

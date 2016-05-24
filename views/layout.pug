@@ -10,6 +10,22 @@ html(lang='en')
       if ENV_DEVELOPMENT
         script(src='http://localhost:35729/livereload.js')
   body
+    .top-bar
+      .top-bar-title.menu-text: a(href="/") Committed Streaker
+      div
+        .top-bar-left
+          ul.menu
+            li: a(href="#") About
+            li: a(href="#") Contact us
+
+        .top-bar-right
+          ul.menu
+            li: a(href="#") RoLLodeQc
+            if user
+              li: a(href="/profile/as-github")= user.displayName || user.username
+              li: a(href="/logout") Logout
+            else
+              li: a(href="/login/github") Login with github
+
     div.row.column
-      h1: a(href='/') Home
       block content
