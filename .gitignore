@@ -6,3 +6,4 @@ cdb.js
 db/sessions-development
 db/users-development
 .nyc_output
+builder
