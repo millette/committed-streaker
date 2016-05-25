@@ -14,7 +14,6 @@
   },
   "scripts": {
     "bower": "bower install",
-    "postinstall": "gulp sass && bower install",
     "css": "gulp sass",
     "lint": "standard",
     "docker": "docker build -t millette/committed-streaker:$npm_package_version .",
@@ -23,13 +22,19 @@
     "test": "standard && nyc ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
+  "bin": {
+    "committed-streaker": "bin/www"
+  },
   "files": [
     "app.js",
     "lib/passport.js",
-    "routes/index.js",
-    "routes/login.js",
-    "routes/logout.js",
-    "routes/profile.js"
+    "routes",
+    "views",
+    "lib",
+    "public/css/style.css",
+    "public/img",
+    "public/js",
+    "bin"
   ],
   "keywords": [
     "streaking",

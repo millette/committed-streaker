@@ -24,7 +24,9 @@ The full callback URL ends with ```/login/github/callback```. In our examples:
 * <https://an.example.com/login/github/callback>
 * <https://an.example.com/bob/login/github/callback>
 
-## Install
+## Messing around
+
+### Install
 ```sh
 git clone ...
 cd ...
@@ -32,25 +34,61 @@ npm install
 bower install
 ```
 
-## Developping
+### Developping
 
 ```sh
 npm run dev
 ```
 
-## Running
+### Running
 
 ```sh
 npm start
 ```
 
-## Testing
+### Testing
 While I've begun to add some unit tests, I'm still working out
 the best ways to code an express app for testability.
 
-## Docker
+### Docker
 You can also run the docker version:
 
 ```sh
 docker run --rm -it -p 80:3030 -e "GITHUB_CLIENT_ID=YOURHEXCODE" -e "GITHUB_CLIENT_SECRET=YOURHEXCODE" -e "GITHUB_STREAKER_ROOT=http://yourdomain.example.com" millette/committed-streaker:0.1.5
+```
+
+## Running for real
+
+### Run it directly
+```sh
+mkdir for-real
+cd for-real
+npm init -y # create empty package.json
+npm install committed-streaker # install it
+node_modules/.bin/committed-streaker # run it
+```
+
+### Run it with Docker
+Put the following in a file called ```Dockerfile```:
+
+```
+FROM iron/node
+
+WORKDIR /app
+ADD . /app
+
+EXPOSE 3030
+ENTRYPOINT ["node", "node_modules/.bin/committed-streaker"]
+```
+
+Then run the following, replacing USERNAME/REPOSITORYNAME:TAG with
+actual values (for example, a simple "mytest" would work):
+
+```sh
+mkdir for-real
+cd for-real
+npm init -y # create empty package.json
+npm install committed-streaker # install it
+docker build -t USERNAME/REPOSITORYNAME:TAG .
+node_modules/.bin/committed-streaker # run it
 ```
