@@ -17,7 +17,7 @@ test('login route', t => {
         },
         redirect: path => {
           t.truthy('redirect called')
-          t.is(path, '/profile')
+          t.is(path, '/profile/as-github')
         }
       }
       if (cb) { cb(null, res) }
@@ -27,7 +27,7 @@ test('login route', t => {
   const passport = {
     authenticate: (a, b) => {
       t.is(a, 'github')
-      t.truthy(!b || b.failureRedirect === '/login')
+      t.truthy(!b || b.failureRedirect === '/')
     }
   }
 

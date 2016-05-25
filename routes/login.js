@@ -10,10 +10,10 @@ module.exports = (services) => {
   })
   services.router.get('/github', services.passport.authenticate('github'))
   services.router.get('/github/callback',
-    services.passport.authenticate('github', { failureRedirect: '/login' }),
+    services.passport.authenticate('github', { failureRedirect: '/' }),
     (req, res) => {
       debug('LOGIN REDIRECT')
-      res.redirect('/profile')
+      res.redirect('/profile/as-github')
     }
   )
   return services.router
