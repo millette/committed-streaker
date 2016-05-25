@@ -63,12 +63,13 @@ docker run --rm -it -p 80:3030 -e "GITHUB_CLIENT_ID=YOURHEXCODE" -e "GITHUB_CLIE
 ```sh
 mkdir for-real
 cd for-real
+mkdir db # create database directory
 npm init -y # create empty package.json
 npm install committed-streaker # install it
 node_modules/.bin/committed-streaker # run it
 ```
 
-### Run it with Docker
+### Build it with Docker and run it
 Put the following in a file called ```Dockerfile```:
 
 ```
@@ -87,8 +88,9 @@ actual values (for example, a simple "mytest" would work):
 ```sh
 mkdir for-real
 cd for-real
+mkdir db # create database directory
 npm init -y # create empty package.json
 npm install committed-streaker # install it
 docker build -t USERNAME/REPOSITORYNAME:TAG .
-node_modules/.bin/committed-streaker # run it
+docker run -d -it -p 3030:3030 -e "GITHUB_CLIENT_ID=YOURHEXCODE" -e "GITHUB_CLIENT_SECRET=YOURHEXCODE" -e "GITHUB_STREAKER_ROOT=http://yourdomain.example.com" mytest # run it
 ```
