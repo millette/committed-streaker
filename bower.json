@@ -7,6 +7,6 @@
     "components"
   ],
   "devDependencies": {
-    "foundation-sites": "^6.2.2-rc2"
+    "foundation-sites": "^6.2.2"
   }
 }
