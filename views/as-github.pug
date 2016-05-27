@@ -16,3 +16,9 @@ block content
       span Current streak
       span.stat= `${data.streaks[0].commits.length} days`
       span March 30 – May 11
+
+  if elapsed
+    div.row.column
+      p= `Updated ${elapsed} hours ago.`
+
+      pre= JSON.stringify(data.streaks[0].commits, null, ' ')

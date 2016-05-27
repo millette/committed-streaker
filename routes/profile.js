@@ -20,9 +20,11 @@ module.exports = (services) => {
     services.ensureLogin.ensureLoggedIn(),
     (req, res) => {
       debug('AS-GITHUB RENDER')
+      const elapsed = Math.round((Date.now() - Date.parse(req.user.app && req.user.app.updated_at)) / 36000) / 100
       res.render('as-github', {
         output: req.user.app && req.user.app.output,
         data: req.user.app && req.user.app.response,
+        elapsed: elapsed,
         user: req.user
       })
     }

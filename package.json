@@ -17,7 +17,7 @@
     "css": "gulp sass",
     "lint": "standard",
     "docker": "docker build -t millette/committed-streaker:$npm_package_version .",
-    "dev": "standard && gulp",
+    "dev": "standard && DEBUG=app gulp",
     "start": "standard && gulp sass && node ./bin/www",
     "test": "standard && nyc ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
@@ -56,13 +56,12 @@
     "express-session-level": "^1.0.0",
     "express-session-passport-cleanup": "^1.0.3",
     "level": "^1.4.0",
-    "lodash.memoize": "^4.1.0",
     "lodash.sortby": "^4.5.0",
     "morgan": "^1.7.0",
     "passport": "^0.3.2",
     "passport-github": "^1.1.0",
     "pug": "^2.0.0-alpha8",
-    "rollodeqc-gh-user-streak": "0.0.3",
+    "rollodeqc-gh-user-streak": "0.1.1",
     "serve-favicon": "^2.3.0"
   },
   "devDependencies": {
