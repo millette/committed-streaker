@@ -30,6 +30,7 @@
     "info"
   ],
   "dependencies": {
+    "debug": "^2.2.0",
     "ejs": "^2.4.2",
     "good": "^7.0.1",
     "good-console": "^6.1.2",

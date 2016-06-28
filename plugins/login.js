@@ -1,9 +1,9 @@
 'use strict'
 
 const joi = require('joi')
+// const debug = require('debug')('yummy')
 
-exports.register = (server, options, next) => {
-  // server.dependency(['vision', 'visionary']) // redundant with attributes.dependencies ?
+const after = (server, next) => {
   server.route({
     method: 'GET',
     path: '/',
@@ -12,6 +12,18 @@ exports.register = (server, options, next) => {
       description: 'Home sweet home (desc)',
       notes: 'Home sweet home, a note',
       tags: ['fi', 'fe', 'fo']
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    path: '/load',
+    config: {
+      handler: (request, reply) => {
+        reply.view('home', { load: request.server.load })
+      },
+      description: 'Charge du serveur',
+      tags: ['server']
     }
   })
 
@@ -36,8 +48,12 @@ exports.register = (server, options, next) => {
   next()
 }
 
+exports.register = (server, options, next) => {
+  server.dependency(['vision', 'visionary'], after)
+  next()
+}
+
 exports.register.attributes = {
-  // 'dependencies': ['vision', 'visionary'] // still need to order manifest.json correctly
   'name': 'login',
   'version': '0.0.1'
 }

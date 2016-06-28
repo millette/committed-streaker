@@ -8,6 +8,7 @@
   "connections": [{ "port": 3060 }],
   "registrations": [
     { "plugin": "hapi-context-app" },
+    { "plugin": "./plugins/login" },
     { "plugin": "inert" },
     { "plugin": "vision" },
     { "plugin": "lout" },
@@ -21,7 +22,6 @@
         }
       }
     },
-    { "plugin": "./plugins/login" },
     {
       "plugin": {
         "register": "hapi-favicon",

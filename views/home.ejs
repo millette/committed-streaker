@@ -6,8 +6,27 @@
 </head>
 <body>
 <h1><%= app.siteTitle %></h1>
+<% if (typeof load === 'object') { %>
+<h2>load</h2>
 <pre>
-<%= JSON.stringify(app, null, ' ') %>
+<%= JSON.stringify(load, null, ' ') %>
 </pre>
+<% } %>
+
+<% if (typeof params === 'object' && Object.keys(params).length) { %>
+<h2>params</h2>
+<pre>
+<%= JSON.stringify(params, null, ' ') %>
+</pre>
+<% } %>
+
+<footer>
+<ul>
+  <li><a href="/">Accueil</a></li>
+  <li><a href="/it/23">Avec paramètre</a></li>
+  <li><a href="/docs">API docs</a></li>
+  <li><a href="/load">Charge du serveur</a></li>
+</ul>
+</footer>
 </body>
 </html>
