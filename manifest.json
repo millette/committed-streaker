@@ -1,22 +1,16 @@
 {
   "server": {
     "app": {
-      "siteTitle": "Committed Streaker",
-      "vaultUrl": "https://btcart.com/now-vault/"
+      "siteTitle": "Committed Streaker"
     },
     "load": { "sampleInterval": 1000 }
   },
   "connections": [{ "port": 3060 }],
   "registrations": [
-    {
-      "plugin": {
-        "register": "hapi-favicon",
-        "options": {
-          "path": "favicon.ico"
-        }
-      }
-    },
+    { "plugin": "hapi-context-app" },
+    { "plugin": "inert" },
     { "plugin": "vision" },
+    { "plugin": "lout" },
     {
       "plugin": {
         "register": "visionary",
@@ -24,6 +18,15 @@
           "engines": { "ejs": "ejs" },
           "path": "views",
           "isCached": false
+        }
+      }
+    },
+    { "plugin": "./plugins/login" },
+    {
+      "plugin": {
+        "register": "hapi-favicon",
+        "options": {
+          "path": "./favicon.ico"
         }
       }
     },
