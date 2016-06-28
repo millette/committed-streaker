@@ -9,10 +9,12 @@
     "email": "robin@millette.info",
     "url": "http://robin.millette.info"
   },
-  "engines": { "node": ">=4" },
+  "engines": {
+    "node": ">=4"
+  },
   "scripts": {
     "lint": "standard",
-    "start": "standard && ...",
+    "start": "standard && rejoice -c manifest.json -p $(pwd)",
     "test": "standard && nyc ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
@@ -21,6 +23,7 @@
     "commits",
     "rollodeqc",
     "github",
+    "hapi",
     "gh",
     "user",
     "username",
@@ -28,7 +31,16 @@
   ],
   "dependencies": {
     "debug": "^2.2.0",
-    "rollodeqc-gh-user-streak": "0.2.1"
+    "ejs": "^2.4.2",
+    "good": "^7.0.1",
+    "good-console": "^6.1.2",
+    "good-squeeze": "^4.0.0",
+    "hapi": "^13.4.1",
+    "hapi-favicon": "^0.1.0",
+    "rejoice": "^3.2.0",
+    "rollodeqc-gh-user-streak": "0.2.1",
+    "vision": "^4.1.0",
+    "visionary": "^6.0.0"
   },
   "devDependencies": {
     "ava": "^0.15.2",

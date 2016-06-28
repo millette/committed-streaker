@@ -1,0 +1,52 @@
+{
+  "server": {
+    "app": {
+      "siteTitle": "Committed Streaker",
+      "vaultUrl": "https://btcart.com/now-vault/"
+    },
+    "load": { "sampleInterval": 1000 }
+  },
+  "connections": [{ "port": 3060 }],
+  "registrations": [
+    {
+      "plugin": {
+        "register": "hapi-favicon",
+        "options": {
+          "path": "favicon.ico"
+        }
+      }
+    },
+    { "plugin": "vision" },
+    {
+      "plugin": {
+        "register": "visionary",
+        "options": {
+          "engines": { "ejs": "ejs" },
+          "path": "views",
+          "isCached": false
+        }
+      }
+    },
+    {
+      "plugin": {
+        "register": "good",
+        "options": {
+          "reporters": {
+            "console": [
+              {
+                "module": "good-squeeze",
+                "name": "Squeeze",
+                "args": [{
+                  "response": "*",
+                  "log": "*"
+                }]
+              },
+              { "module": "good-console" },
+              "stdout"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
