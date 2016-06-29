@@ -10,19 +10,18 @@ const login = (request, reply) => request.auth.session.authenticate(
   () => reply.redirect('/')
 )
 
-const registerUser = (request, reply) => nano.use('_users').insert(
-  {
-    _id: 'org.couchdb.user:' + request.payload.name,
-    name: request.payload.name,
-    password: request.payload.password,
-    roles: [],
-    type: 'user'
-  },
-  (err) => {
-    if (err) { return reply.redirect('/register') }
-    login(request, reply)
-  }
-)
+const registerUser = (request, reply) => !request.payload.password || request.payload.password !== request.payload.password2
+  ? reply.redirect('/register')
+  : nano.use('_users').insert(
+    {
+      _id: 'org.couchdb.user:' + request.payload.name,
+      name: request.payload.name,
+      password: request.payload.password,
+      roles: [],
+      type: 'user'
+    },
+    (err) => err ? reply.redirect('/register') : login(request, reply)
+  )
 
 const logout = (request, reply) => {
   request.auth.session.clear()
@@ -33,17 +32,6 @@ const serverLoad = (request, reply) => reply.view('home', { load: request.server
 
 const after = (server, next) => {
   server.auth.strategy('default', 'couchdb-cookie', true, {
-    /*
-    validateFunc: (session, cb) => {
-      debug('server:', Object.keys(server))
-      debug('session:', session)
-      nano.session((err, ses) => {
-        debug('nano.session err:', err)
-        debug('nano.session:', ses)
-      })
-      cb(null, true, session)
-    },
-    */
     redirectTo: '/login',
     redirectOnTry: false
   })
