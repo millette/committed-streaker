@@ -2,17 +2,41 @@
 
 const joi = require('joi')
 const nano = require('nano')('http://localhost:5984')
-// const debug = require('debug')('yummy')
+const streak = require('rollodeqc-gh-user-streak')
+const debug = require('debug')('yummy')
+
+const userDB = nano.use('_users')
+
+const usersFeed = userDB.follow({ include_docs: true, since: 'now' })
+
+usersFeed.on('change', (change) => {
+  debug('CHANGE:', change)
+  if (change.doc && change.doc.contribs) { return }
+  if (change.delete) { return }
+  streak.fetchContribs(change.doc.name)
+    .then((contribs) => {
+      change.doc.contribs = contribs
+      userDB.insert(change.doc, (err, body) => {
+        if (err) {
+          debug('insert user contribs error:', err)
+        } else {
+          debug('BODY:', body.id, body.rev)
+        }
+      })
+    })
+})
+
+usersFeed.follow()
 
 const login = (request, reply) => request.auth.session.authenticate(
   request.payload.name,
   request.payload.password,
-  () => reply.redirect('/')
+  () => reply.redirect('/user/' + request.payload.name)
 )
 
 const registerUser = (request, reply) => !request.payload.password || request.payload.password !== request.payload.password2
   ? reply.redirect('/register')
-  : nano.use('_users').insert(
+  : userDB.insert(
     {
       _id: 'org.couchdb.user:' + request.payload.name,
       name: request.payload.name,
@@ -29,6 +53,20 @@ const logout = (request, reply) => {
 }
 
 const serverLoad = (request, reply) => reply.view('home', { load: request.server.load })
+
+const user = (request, reply) => {
+  // reply(streak.fetchContribs(request.params.user))
+  // reply(streak(request.params.user))
+  userDB.get('org.couchdb.user:' + request.params.user, (err, body) => {
+    if (err) { return reply.redirect('/') }
+    reply.view('user', {
+      user: {
+        name: body.name,
+        contribs: body.contribs
+      }
+    }).etag(body._rev)
+  })
+}
 
 const after = (server, next) => {
   server.auth.strategy('default', 'couchdb-cookie', true, {
@@ -123,6 +161,24 @@ const after = (server, next) => {
           it: joi.number()
             .required()
             .description('The number for \'it\'.')
+        }
+      }
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    path: '/user/{user}',
+    config: {
+      handler: user,
+      // handler: { view: { template: 'home' } },
+      description: 'User sweet home (desc)',
+      tags: ['user'],
+      validate: {
+        params: {
+          user: joi.string()
+            .required()
+            .description('The username for \'it\'.')
         }
       }
     }
