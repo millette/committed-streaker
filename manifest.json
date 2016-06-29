@@ -7,6 +7,8 @@
   },
   "connections": [{ "port": 3060 }],
   "registrations": [
+    { "plugin": "hapi-context-credentials" },
+    { "plugin": "hapi-auth-couchdb-cookie" },
     { "plugin": "hapi-context-app" },
     { "plugin": "./plugins/login" },
     { "plugin": "inert" },
