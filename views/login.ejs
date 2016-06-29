@@ -1,0 +1,21 @@
+<%- include('partials/doctype') %>
+<body>
+<h1><%= app.siteTitle %></h1>
+<% if (!credentials) { %>
+<h2>Login</h2>
+<form method="post">
+<label>name: <input type="text" name="name"></label><br>
+<label>password: <input type="password" name="password"></label><br>
+<input type="submit">
+</form>
+<% } else { %>
+<h2>Logged in</h2>
+<form method="post" action="/logout">
+<input type="submit">
+</form>
+<% } %>
+<footer>
+<%- include('partials/nav') %>
+</footer>
+</body>
+</html>
