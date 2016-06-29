@@ -18,7 +18,7 @@ const registerUser = (request, reply) => nano.use('_users').insert(
     roles: [],
     type: 'user'
   },
-  (err, resp) => {
+  (err) => {
     if (err) { return reply.redirect('/register') }
     login(request, reply)
   }
@@ -149,6 +149,6 @@ exports.register = (server, options, next) => {
 }
 
 exports.register.attributes = {
-  'name': 'login',
-  'version': '0.0.1'
+  name: 'login',
+  version: '0.1.0'
 }
