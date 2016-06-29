@@ -4,8 +4,14 @@ const joi = require('joi')
 const nano = require('nano')('http://localhost:5984')
 // const debug = require('debug')('yummy')
 
-const registerUser = (request) => new Promise((resolve, reject) => {
-  nano.use('_users').insert({
+const login = (request, reply) => request.auth.session.authenticate(
+  request.payload.name,
+  request.payload.password,
+  () => reply.redirect('/')
+)
+
+const registerUser = (request, reply) => nano.use('_users').insert(
+  {
     _id: 'org.couchdb.user:' + request.payload.name,
     name: request.payload.name,
     password: request.payload.password,
@@ -13,10 +19,17 @@ const registerUser = (request) => new Promise((resolve, reject) => {
     type: 'user'
   },
   (err, resp) => {
-    if (err) { return reject(err) }
-    resolve(resp)
-  })
-})
+    if (err) { return reply.redirect('/register') }
+    login(request, reply)
+  }
+)
+
+const logout = (request, reply) => {
+  request.auth.session.clear()
+  return reply.redirect('/')
+}
+
+const serverLoad = (request, reply) => reply.view('home', { load: request.server.load })
 
 const after = (server, next) => {
   server.auth.strategy('default', 'couchdb-cookie', true, {
@@ -51,15 +64,7 @@ const after = (server, next) => {
     path: '/register',
     config: {
       auth: { mode: 'try' },
-      handler: (request, reply) => registerUser(request)
-        .then(() => {
-          request.auth.session.authenticate(
-            request.payload.name,
-            request.payload.password,
-            () => reply.redirect('/')
-          )
-        })
-        .catch(() => reply.redirect('/register')),
+      handler: registerUser,
       description: 'Register sweet home',
       tags: ['auth']
     }
@@ -81,13 +86,7 @@ const after = (server, next) => {
     path: '/login',
     config: {
       auth: { mode: 'try' },
-      handler: (request, reply) => {
-        request.auth.session.authenticate(
-          request.payload.name,
-          request.payload.password,
-          () => reply.redirect('/')
-        )
-      },
+      handler: login,
       description: 'Login sweet home (desc)',
       tags: ['auth']
     }
@@ -97,10 +96,7 @@ const after = (server, next) => {
     method: 'POST',
     path: '/logout',
     config: {
-      handler: (request, reply) => {
-        request.auth.session.clear()
-        return reply.redirect('/')
-      },
+      handler: logout,
       tags: ['auth']
     }
   })
@@ -120,9 +116,7 @@ const after = (server, next) => {
     method: 'GET',
     path: '/load',
     config: {
-      handler: (request, reply) => {
-        reply.view('home', { load: request.server.load })
-      },
+      handler: serverLoad,
       description: 'Charge du serveur',
       tags: ['server']
     }
