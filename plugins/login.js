@@ -10,7 +10,7 @@ const userDB = nano.use('_users')
 const usersFeed = userDB.follow({ include_docs: true, since: 'now' })
 
 usersFeed.on('change', (change) => {
-  debug('CHANGE:', change)
+  debug('CHANGE:', change.seq)
   if (change.doc && change.doc.contribs) { return }
   if (change.delete) { return }
   streak.fetchContribs(change.doc.name)
@@ -55,8 +55,6 @@ const logout = (request, reply) => {
 const serverLoad = (request, reply) => reply.view('home', { load: request.server.load })
 
 const user = (request, reply) => {
-  // reply(streak.fetchContribs(request.params.user))
-  // reply(streak(request.params.user))
   userDB.get('org.couchdb.user:' + request.params.user, (err, body) => {
     if (err) { return reply.redirect('/') }
     reply.view('user', {
