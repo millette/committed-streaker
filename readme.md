@@ -1,8 +1,9 @@
 # The committed streaker
-> Bringing the streakers back since 2016
 [![Build Status](https://travis-ci.org/millette/committed-streaker.svg?branch=master)](https://travis-ci.org/millette/committed-streaker)
 [![Coverage Status](https://coveralls.io/repos/github/millette/committed-streaker/badge.svg?branch=master)](https://coveralls.io/github/millette/committed-streaker?branch=master)
 [![Dependency Status](https://gemnasium.com/badges/github.com/millette/committed-streaker.svg)](https://gemnasium.com/github.com/millette/committed-streaker)
+
+> Bringing the streakers back since 2016
 
 ## Required environment variables
 See <https://github.com/settings/developers>

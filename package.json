@@ -45,7 +45,7 @@
     "lout": "^9.0.1",
     "nano": "^6.2.0",
     "rejoice": "^3.2.0",
-    "rollodeqc-gh-user-streak": "0.2.1",
+    "rollodeqc-gh-user-streak": "^0.2.1",
     "vision": "^4.1.0",
     "visionary": "^6.0.0"
   },
