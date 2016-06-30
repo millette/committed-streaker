@@ -2,26 +2,21 @@
 <body>
 <h1><%= app.siteTitle %></h1>
 
-<% if (typeof user === 'object') { %>
+<% if (user.name && user.name === credentials.name) { %>
+<form method="post" action="/user/<%= credentials.name %>/refresh">
+<input type="submit">
+</form>
+<% } %>
+
 <h2>user</h2>
 <pre>
 <%= JSON.stringify(user, null, ' ') %>
 </pre>
-<% } %>
 
-<% if (typeof params === 'object' && Object.keys(params).length) { %>
-<h2>params</h2>
-<pre>
-<%= JSON.stringify(params, null, ' ') %>
-</pre>
-<% } %>
-
-<% if (typeof credentials === 'object' && Object.keys(credentials).length) { %>
 <h2>credentials</h2>
 <pre>
 <%= JSON.stringify(credentials, null, ' ') %>
 </pre>
-<% } %>
 
 <footer>
 <%- include('partials/nav') %>
