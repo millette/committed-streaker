@@ -1,33 +1,20 @@
 'use strict'
 
+// npm
 const joi = require('joi')
-const nano = require('nano')('http://localhost:5984')
 const streak = require('rollodeqc-gh-user-streak')
 const debug = require('debug')('yummy')
 const pick = require('lodash.pick')
+const nano = require('nano')('http://localhost:5984')
 
 const userDB = nano.use('_users')
 
-const usersFeed = userDB.follow({ include_docs: true, since: 'now' })
-
-usersFeed.on('change', (change) => {
-  debug('CHANGE:', change.seq)
-  if (change.doc && change.doc.contribs) { return }
-  if (change.delete) { return }
-  streak.fetchContribs(change.doc.name)
-    .then((contribs) => {
-      change.doc.contribs = contribs
-      userDB.insert(change.doc, (err, body) => {
-        if (err) {
-          debug('insert user contribs error:', err)
-        } else {
-          debug('BODY:', body.id, body.rev)
-        }
-      })
-    })
-})
-
-usersFeed.follow()
+const fetchContribs = (name) => streak.fetchContribs(name)
+  .then((contribs) => {
+    const contribs2 = { }
+    contribs.forEach((c) => { contribs2[c.date] = c.count })
+    return contribs2
+  })
 
 const refresh = (request, reply) => userDB.get(couchUser(request.params.name), (err, change) => {
   if (err) {
@@ -39,7 +26,7 @@ const refresh = (request, reply) => userDB.get(couchUser(request.params.name), (
   reply.redirect(`/user/${request.params.name}`)
 
   /*
-  streak.fetchContribs(change.doc.name)
+  fetchContribs(change.doc.name)
     .then((contribs) => {
       change.doc.contribs = contribs
       userDB.insert(change.doc, (err, body) => {
@@ -91,9 +78,8 @@ const user = (request, reply) => userDB.get(couchUser(request.params.name), (err
   if (err) { return reply.redirect('/') }
   const doc = pick(body, ['name', 'contribs'])
   doc.contribs2 = { }
-  doc.contribs.forEach((c) => { if (count) { doc.contribs2[c.date] = c.count } })
-  reply.view('user', { user: doc })
-    .etag(body._rev)
+  doc.contribs.forEach((c) => { doc.contribs2[c.date] = c.count })
+  reply.view('user', { user: doc }).etag(body._rev)
 })
 
 const after = (server, next) => {
@@ -212,7 +198,29 @@ const after = (server, next) => {
   next()
 }
 
+const userChanges = () => {
+  const usersFeed = userDB.follow({ include_docs: true, since: 'now' })
+  usersFeed.on('change', (change) => {
+    debug('CHANGE:', change.seq)
+    if (change.doc && change.doc.contribs) { return }
+    if (change.delete) { return }
+    fetchContribs(change.doc.name)
+      .then((contribs) => {
+        change.doc.contribs = contribs
+        userDB.insert(change.doc, (err, body) => {
+          if (err) {
+            debug('insert user contribs error:', err)
+          } else {
+            debug('BODY:', body.id, body.rev)
+          }
+        })
+      })
+  })
+  usersFeed.follow()
+}
+
 exports.register = (server, options, next) => {
+  userChanges()
   server.dependency(['hapi-auth-couchdb-cookie', 'hapi-context-credentials', 'vision', 'visionary'], after)
   next()
 }
