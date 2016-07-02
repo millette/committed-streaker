@@ -16,35 +16,43 @@ const fetchContribs = (name) => streak.fetchContribs(name)
     return contribs2
   })
 
-const refresh = (request, reply) => userDB.get(couchUser(request.params.name), (err, change) => {
-  if (err) {
-    debug('refresh error:', err)
-    return reply.redirect(`/user/${request.params.name}`)
-  }
-
-  debug('refresh change:', change)
-  reply.redirect(`/user/${request.params.name}`)
-
-  /*
-  fetchContribs(change.doc.name)
-    .then((contribs) => {
-      change.doc.contribs = contribs
-      userDB.insert(change.doc, (err, body) => {
-        if (err) {
-          debug('insert user contribs error:', err)
-        } else {
-          debug('BODY:', body.id, body.rev)
-        }
-      })
-    })
-  */
-
-/*
-  reply.redirect('/')
-  reply.view('user', { user: pick(body, ['name', 'contribs']) })
-    .etag(body._rev)
-*/
+const getUser = (name) => new Promise((resolve, reject) => {
+  userDB.get(couchUser(name), (err, change) => {
+    if (err) { return reject(err) }
+    resolve(change)
+  })
 })
+
+const putUser = (userDoc) => new Promise((resolve, reject) => {
+  userDB.insert(userDoc, (err, change) => {
+    if (err) { return reject(err) }
+    resolve(change)
+  })
+})
+
+const refresh = (request, reply) => getUser(request.params.name)
+  .then((userDoc) => Promise.all([userDoc, fetchContribs(userDoc.name)]))
+  .then((zzz) => {
+    Object.assign(zzz[0].contribs, zzz[1])
+    return putUser(zzz[0])
+    /*
+    userDB.insert(zzz[0], (err, body) => {
+      if (err) {
+        debug('insert user contribs error:', err)
+      } else {
+        debug('BODY:', body.id, body.rev)
+      }
+    })
+    reply.redirect(`/user/${request.params.name}`)
+    */
+  })
+  .then((zzz) => {
+    reply.redirect(`/user/${request.params.name}`)
+  })
+  .catch((err) => {
+    debug('refresh error:', err)
+    reply.redirect(`/user/${request.params.name}`)
+  })
 
 const login = (request, reply) => request.auth.session.authenticate(
   request.payload.name,
@@ -54,6 +62,23 @@ const login = (request, reply) => request.auth.session.authenticate(
 
 const couchUser = (name) => `org.couchdb.user:${name}`
 
+const registerUser = (request, reply) => {
+  if (request.payload.password && request.payload.password === request.payload.password2) {
+    putUser({
+      _id: couchUser(request.payload.name),
+      name: request.payload.name,
+      password: request.payload.password,
+      roles: [],
+      type: 'user'
+    })
+      .then((a) => login(request, reply))
+      .catch((e) => reply.redirect('/register'))
+  } else {
+    reply.redirect('/register')
+  }
+}
+
+/*
 const registerUser = (request, reply) => request.payload.password && request.payload.password === request.payload.password2
   ? userDB.insert(
     {
@@ -66,6 +91,7 @@ const registerUser = (request, reply) => request.payload.password && request.pay
     (err) => err ? reply.redirect('/register') : login(request, reply)
   )
   : reply.redirect('/register')
+*/
 
 const logout = (request, reply) => {
   request.auth.session.clear()
@@ -74,13 +100,15 @@ const logout = (request, reply) => {
 
 const serverLoad = (request, reply) => reply.view('home', { load: request.server.load })
 
-const user = (request, reply) => userDB.get(couchUser(request.params.name), (err, body) => {
-  if (err) { return reply.redirect('/') }
-  const doc = pick(body, ['name', 'contribs'])
-  doc.contribs2 = { }
-  doc.contribs.forEach((c) => { doc.contribs2[c.date] = c.count })
-  reply.view('user', { user: doc }).etag(body._rev)
-})
+const user = (request, reply) => getUser(request.params.name)
+  .then((body) => {
+    const doc = pick(body, ['name', 'contribs', '_rev'])
+    reply.view('user', { user: doc }).etag(body._rev)
+  })
+  .catch((err) => {
+    debug('get user error:', err)
+    reply.redirect('/')
+  })
 
 const after = (server, next) => {
   server.auth.strategy('default', 'couchdb-cookie', true, {
