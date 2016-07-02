@@ -35,20 +35,8 @@ const refresh = (request, reply) => getUser(request.params.name)
   .then((zzz) => {
     Object.assign(zzz[0].contribs, zzz[1])
     return putUser(zzz[0])
-    /*
-    userDB.insert(zzz[0], (err, body) => {
-      if (err) {
-        debug('insert user contribs error:', err)
-      } else {
-        debug('BODY:', body.id, body.rev)
-      }
-    })
-    reply.redirect(`/user/${request.params.name}`)
-    */
   })
-  .then((zzz) => {
-    reply.redirect(`/user/${request.params.name}`)
-  })
+  .then((zzz) => reply.redirect(`/user/${request.params.name}`))
   .catch((err) => {
     debug('refresh error:', err)
     reply.redirect(`/user/${request.params.name}`)
@@ -77,21 +65,6 @@ const registerUser = (request, reply) => {
     reply.redirect('/register')
   }
 }
-
-/*
-const registerUser = (request, reply) => request.payload.password && request.payload.password === request.payload.password2
-  ? userDB.insert(
-    {
-      _id: couchUser(request.payload.name),
-      name: request.payload.name,
-      password: request.payload.password,
-      roles: [],
-      type: 'user'
-    },
-    (err) => err ? reply.redirect('/register') : login(request, reply)
-  )
-  : reply.redirect('/register')
-*/
 
 const logout = (request, reply) => {
   request.auth.session.clear()
