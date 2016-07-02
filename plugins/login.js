@@ -5,7 +5,10 @@ const joi = require('joi')
 const streak = require('rollodeqc-gh-user-streak')
 const debug = require('debug')('yummy')
 const pick = require('lodash.pick')
+const shuffle = require('lodash.shuffle')
 const nano = require('nano')('http://localhost:5984')
+
+debug('loaded...')
 
 const userDB = nano.use('_users')
 
@@ -15,6 +18,8 @@ const fetchContribs = (name) => streak.fetchContribs(name)
     contribs.forEach((c) => { contribs2[c.date] = c.count })
     return contribs2
   })
+
+const couchUser = (name) => `org.couchdb.user:${name}`
 
 const getUser = (name) => new Promise((resolve, reject) => {
   userDB.get(couchUser(name), (err, change) => {
@@ -30,13 +35,33 @@ const putUser = (userDoc) => new Promise((resolve, reject) => {
   })
 })
 
-const refresh = (request, reply) => getUser(request.params.name)
-  .then((userDoc) => Promise.all([userDoc, fetchContribs(userDoc.name)]))
-  .then((zzz) => {
-    Object.assign(zzz[0].contribs, zzz[1])
-    return putUser(zzz[0])
+const refreshImp = (name) => Promise.all([
+  getUser(name), fetchContribs(name)
+])
+  .then((ps) => {
+    Object.assign(ps[0].contribs, ps[1])
+    return putUser(ps[0])
   })
-  .then((zzz) => reply.redirect(`/user/${request.params.name}`))
+
+const dailyUpdates = () => {
+  userDB.list({ startkey: 'org.couchdb.user:' }, (err, body) => {
+    if (err) { return debug('dailyUpdates error:', err) }
+    const delay = 21600000 / body.rows.length
+    // const delay = 1800000 / body.rows.length
+    // const delay = 86400000 / body.rows.length
+    const rows = shuffle(body.rows)
+    rows.forEach((r, k) => {
+      debug('r, k:', r, k)
+      setTimeout((name) => {
+        debug('name, k:', name, k)
+        setInterval(refreshImp.bind(null, name), 86400000)
+      }, k * delay, r.id.slice(17))
+    })
+  })
+}
+
+const refresh = (request, reply) => refreshImp(request.params.name)
+  .then(() => reply.redirect(`/user/${request.params.name}`))
   .catch((err) => {
     debug('refresh error:', err)
     reply.redirect(`/user/${request.params.name}`)
@@ -48,18 +73,17 @@ const login = (request, reply) => request.auth.session.authenticate(
   () => reply.redirect(`/user/${request.payload.name}`)
 )
 
-const couchUser = (name) => `org.couchdb.user:${name}`
-
 const registerUser = (request, reply) => {
   if (request.payload.password && request.payload.password === request.payload.password2) {
-    putUser({
+    return putUser({
       _id: couchUser(request.payload.name),
       name: request.payload.name,
       password: request.payload.password,
       roles: [],
       type: 'user'
     })
-      .then((a) => login(request, reply))
+      .then((r) => setInterval(refreshImp.bind(null, r._id.slice(17)), 86400000))
+      .then(() => login(request, reply))
       .catch((e) => reply.redirect('/register'))
   } else {
     reply.redirect('/register')
@@ -84,6 +108,7 @@ const user = (request, reply) => getUser(request.params.name)
   })
 
 const after = (server, next) => {
+  debug('after...')
   server.auth.strategy('default', 'couchdb-cookie', true, {
     redirectTo: '/login',
     redirectOnTry: false
@@ -221,7 +246,9 @@ const userChanges = () => {
 }
 
 exports.register = (server, options, next) => {
+  debug('register...')
   userChanges()
+  dailyUpdates()
   server.dependency(['hapi-auth-couchdb-cookie', 'hapi-context-credentials', 'vision', 'visionary'], after)
   next()
 }
