@@ -8,8 +8,6 @@ const pick = require('lodash.pick')
 const shuffle = require('lodash.shuffle')
 const nano = require('nano')('http://localhost:5984')
 
-debug('loaded...')
-
 const userDB = nano.use('_users')
 
 const fetchContribs = (name) => streak.fetchContribs(name)
@@ -20,6 +18,8 @@ const fetchContribs = (name) => streak.fetchContribs(name)
   })
 
 const couchUser = (name) => `org.couchdb.user:${name}`
+
+const couchUserToName = (resp) => resp.id.slice(17) // 'org.couchdb.user:'.length === 17
 
 const getUser = (name) => new Promise((resolve, reject) => {
   userDB.get(couchUser(name), (err, change) => {
@@ -44,20 +44,21 @@ const refreshImp = (name) => Promise.all([
     return putUser(ps[0])
   })
 
-const dailyUpdates = () => {
+const dailyUpdates = (onStart) => {
   userDB.list({ startkey: 'org.couchdb.user:' }, (err, body) => {
     if (err) { return debug('dailyUpdates error:', err) }
     // const delay = 21600000 / body.rows.length // spread over 6h
-    const delay = 1800000 / body.rows.length // spread over 30m
+    // const delay = 1800000 / body.rows.length // spread over 30m
+    const delay = 19440000 / body.rows.length // spread over 5.4h
     // const delay = 86400000 / body.rows.length // spread over 1d
 
     shuffle(body.rows).forEach((r, k) => {
-      debug('r, k:', r, k)
+      debug('setup contrib updates for', r)
       setTimeout((name) => {
-        debug('name, k:', name, k)
-        refreshImp(name)
+        debug('contrib updates ready for', name)
+        if (onStart) { refreshImp(name) }
         setInterval(refreshImp.bind(null, name), 86400000)
-      }, k * delay, r.id.slice(17))
+      }, k * delay, couchUserToName(r))
     })
   })
 }
@@ -265,7 +266,7 @@ const userChanges = () => {
 exports.register = (server, options, next) => {
   debug('register...')
   userChanges()
-  dailyUpdates()
+  dailyUpdates(true)
   server.dependency(['hapi-auth-couchdb-cookie', 'hapi-context-credentials', 'vision', 'visionary'], after)
   next()
 }
