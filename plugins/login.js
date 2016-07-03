@@ -39,21 +39,23 @@ const refreshImp = (name) => Promise.all([
   getUser(name), fetchContribs(name)
 ])
   .then((ps) => {
-    Object.assign(ps[0].contribs, ps[1])
+    if (!ps[0].contribs) { ps[0].contribs = { } }
+    Object.assign(ps[0].contribs, ps[1]) // ps[1].filter((z) => z.count)
     return putUser(ps[0])
   })
 
 const dailyUpdates = () => {
   userDB.list({ startkey: 'org.couchdb.user:' }, (err, body) => {
     if (err) { return debug('dailyUpdates error:', err) }
-    const delay = 21600000 / body.rows.length
-    // const delay = 1800000 / body.rows.length
-    // const delay = 86400000 / body.rows.length
-    const rows = shuffle(body.rows)
-    rows.forEach((r, k) => {
+    // const delay = 21600000 / body.rows.length // spread over 6h
+    const delay = 1800000 / body.rows.length // spread over 30m
+    // const delay = 86400000 / body.rows.length // spread over 1d
+
+    shuffle(body.rows).forEach((r, k) => {
       debug('r, k:', r, k)
       setTimeout((name) => {
         debug('name, k:', name, k)
+        refreshImp(name)
         setInterval(refreshImp.bind(null, name), 86400000)
       }, k * delay, r.id.slice(17))
     })
@@ -95,7 +97,15 @@ const logout = (request, reply) => {
   return reply.redirect('/')
 }
 
-const serverLoad = (request, reply) => reply.view('home', { load: request.server.load })
+const serverLoad = (request, reply) => {
+  request.server.load.uptime = process.uptime()
+  reply.view('home', { load: request.server.load })
+}
+
+const serverLoadJson = (request, reply) => {
+  request.server.load.uptime = process.uptime()
+  reply(request.server.load)
+}
 
 const user = (request, reply) => getUser(request.params.name)
   .then((body) => {
@@ -206,6 +216,16 @@ const after = (server, next) => {
 
   server.route({
     method: 'GET',
+    path: '/load/json',
+    config: {
+      handler: serverLoadJson,
+      description: 'Charge du serveur',
+      tags: ['server', 'json']
+    }
+  })
+
+  server.route({
+    method: 'GET',
     path: '/user/{name}',
     config: {
       handler: user,
@@ -228,18 +248,15 @@ const userChanges = () => {
   const usersFeed = userDB.follow({ include_docs: true, since: 'now' })
   usersFeed.on('change', (change) => {
     debug('CHANGE:', change.seq)
+    // debug('CHANGE-FULL:', change)
     if (change.doc && change.doc.contribs) { return }
     if (change.delete) { return }
     fetchContribs(change.doc.name)
       .then((contribs) => {
         change.doc.contribs = contribs
-        userDB.insert(change.doc, (err, body) => {
-          if (err) {
-            debug('insert user contribs error:', err)
-          } else {
-            debug('BODY:', body.id, body.rev)
-          }
-        })
+        putUser(change.doc)
+          .then((body) => debug('BODY:', body.id, body.rev))
+          .catch((err) => debug('insert user contribs error:', err))
       })
   })
   usersFeed.follow()

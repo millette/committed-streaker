@@ -2,4 +2,5 @@ node_modules/
 npm-debug.log
 .nyc_output
 old-stuff
+names.txt
 
