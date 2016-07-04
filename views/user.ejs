@@ -2,10 +2,11 @@
 <body>
 <h1><%= app.siteTitle %></h1>
 
-<% if (user.name && user.name === credentials.name) { %>
+<% if (user.name && user.name === credentials.profile.username) { %>
 <form method="post" action="/user/<%= user.name %>/refresh">
-<input type="submit">
+<input type="submit" value="refresh">
 </form>
+<!-- form method="post" action="/logout"><input type="submit" value="logout"></form -->
 <% } %>
 
 <h2>user</h2>

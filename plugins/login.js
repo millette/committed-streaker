@@ -2,13 +2,14 @@
 
 // npm
 const joi = require('joi')
+const boom = require('boom')
 const streak = require('rollodeqc-gh-user-streak')
 const debug = require('debug')('yummy')
 const pick = require('lodash.pick')
-const shuffle = require('lodash.shuffle')
+// const shuffle = require('lodash.shuffle')
 const nano = require('nano')('http://localhost:5984')
 
-const userDB = nano.use('_users')
+const userDB = nano.use('u2')
 
 const fetchContribs = (name) => streak.fetchContribs(name)
   .then((contribs) => {
@@ -19,7 +20,7 @@ const fetchContribs = (name) => streak.fetchContribs(name)
 
 const couchUser = (name) => `org.couchdb.user:${name}`
 
-const couchUserToName = (resp) => resp.id.slice(17) // 'org.couchdb.user:'.length === 17
+// const couchUserToName = (resp) => resp.id.slice(17) // 'org.couchdb.user:'.length === 17
 
 const getUser = (name) => new Promise((resolve, reject) => {
   userDB.get(couchUser(name), (err, change) => {
@@ -44,6 +45,7 @@ const refreshImp = (name) => Promise.all([
     return putUser(ps[0])
   })
 
+/*
 const dailyUpdates = (onStart) => {
   userDB.list({ startkey: 'org.couchdb.user:' }, (err, body) => {
     if (err) { return debug('dailyUpdates error: %s', err) }
@@ -63,6 +65,7 @@ const dailyUpdates = (onStart) => {
     })
   })
 }
+*/
 
 const refresh = (request, reply) => refreshImp(request.params.name)
   .then(() => reply.redirect(`/user/${request.params.name}`))
@@ -71,12 +74,24 @@ const refresh = (request, reply) => refreshImp(request.params.name)
     reply.redirect(`/user/${request.params.name}`)
   })
 
+/*
 const login = (request, reply) => request.auth.session.authenticate(
   request.payload.name,
   request.payload.password,
   () => reply.redirect(`/user/${request.payload.name}`)
 )
+*/
 
+const login = (request, reply) => {
+  if (!request.auth.isAuthenticated) {
+    return reply(boom.unauthorized('Authentication failed: ' + request.auth.error.message))
+  }
+
+  request.cookieAuth.set(request.auth.credentials)
+  return reply.redirect(`/user/${request.auth.credentials.profile.username}`)
+}
+
+/*
 const registerUser = (request, reply) => {
   if (request.payload.password && request.payload.password === request.payload.password2) {
     return putUser({
@@ -93,11 +108,15 @@ const registerUser = (request, reply) => {
     reply.redirect('/register')
   }
 }
+*/
 
+/*
 const logout = (request, reply) => {
   request.auth.session.clear()
+  // request.cookieAuth.clear() // bad
   return reply.redirect('/')
 }
+*/
 
 const serverLoad = (request, reply) => {
   request.server.load.uptime = process.uptime()
@@ -121,11 +140,24 @@ const user = (request, reply) => getUser(request.params.name)
 
 const after = (server, next) => {
   debug('after...')
-  server.auth.strategy('default', 'couchdb-cookie', true, {
+  server.auth.strategy('session', 'cookie', true, {
+    password: process.env.SESSION_PASSWORD,
     redirectTo: '/login',
-    redirectOnTry: false
+    isSecure: false
+    // redirectOnTry: false
   })
 
+  server.auth.strategy('github', 'bell', {
+    provider: 'github',
+    password: process.env.GITHUB_PASSWORD,
+    clientId: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    // redirectTo: '/login',
+    isSecure: false
+    // redirectOnTry: false
+  })
+
+/*
   server.route({
     method: 'GET',
     path: '/register',
@@ -147,18 +179,22 @@ const after = (server, next) => {
       tags: ['auth']
     }
   })
+*/
 
   server.route({
     method: 'GET',
     path: '/login',
     config: {
-      auth: { mode: 'try' },
-      handler: { view: { template: 'login' } },
+      auth: 'github',
+      // auth: { mode: 'try' },
+      // handler: { view: { template: 'login' } },
+      handler: login,
       description: 'Login sweet home (desc)',
       tags: ['auth']
     }
   })
 
+/*
   server.route({
     method: 'POST',
     path: '/login',
@@ -169,6 +205,7 @@ const after = (server, next) => {
       tags: ['auth']
     }
   })
+*/
 
   server.route({
     method: 'POST',
@@ -186,6 +223,7 @@ const after = (server, next) => {
     }
   })
 
+/*
   server.route({
     method: 'POST',
     path: '/logout',
@@ -194,11 +232,13 @@ const after = (server, next) => {
       tags: ['auth']
     }
   })
+*/
 
   server.route({
     method: 'GET',
     path: '/',
     config: {
+      auth: 'session',
       handler: { view: { template: 'home' } },
       description: 'Home sweet home (desc)',
       notes: 'Home sweet home, a note',
@@ -266,8 +306,8 @@ const userChanges = () => {
 exports.register = (server, options, next) => {
   debug('register...')
   userChanges()
-  dailyUpdates(true)
-  server.dependency(['hapi-auth-couchdb-cookie', 'hapi-context-credentials', 'vision', 'visionary'], after)
+  // dailyUpdates(true)
+  server.dependency(['hapi-auth-cookie', 'bell', 'hapi-context-credentials', 'vision', 'visionary'], after)
   next()
 }
 

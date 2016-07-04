@@ -30,13 +30,15 @@
     "info"
   ],
   "dependencies": {
+    "bell": "^7.9.1",
+    "boom": "^3.2.2",
     "debug": "^2.2.0",
     "ejs": "^2.4.2",
     "good": "^7.0.1",
     "good-console": "^6.1.2",
     "good-squeeze": "^4.0.0",
     "hapi": "^13.4.1",
-    "hapi-auth-couchdb-cookie": "^3.0.2",
+    "hapi-auth-cookie": "^6.1.1",
     "hapi-context-app": "^0.2.0",
     "hapi-context-credentials": "^2.0.0",
     "hapi-favicon": "^0.1.0",
