@@ -1,6 +1,16 @@
 <%- include('partials/doctype') %>
 <body>
 <h1><%= app.siteTitle %></h1>
+
+<% if (typeof credentials === 'object' && credentials && Object.keys(credentials).length) { %>
+<h2>credentials</h2>
+<pre>
+<%= JSON.stringify(credentials, null, ' ') %>
+</pre>
+<% } else { %>
+<p><a href="/auth/github">Login github</a></p>
+<% } %>
+
 <% if (typeof load === 'object') { %>
 <h2>load <small><a href="/load/json">JSON</a></small></h2>
 <pre>
@@ -8,17 +18,10 @@
 </pre>
 <% } %>
 
-<% if (typeof params === 'object' && Object.keys(params).length) { %>
+<% if (typeof params === 'object' && params && Object.keys(params).length) { %>
 <h2>params</h2>
 <pre>
 <%= JSON.stringify(params, null, ' ') %>
-</pre>
-<% } %>
-
-<% if (typeof credentials === 'object' && Object.keys(credentials).length) { %>
-<h2>credentials</h2>
-<pre>
-<%= JSON.stringify(credentials, null, ' ') %>
 </pre>
 <% } %>
 

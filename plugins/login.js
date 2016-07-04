@@ -45,14 +45,6 @@ const refreshImp = (name) => Promise.all([
   .then((ps) => {
     if (!ps[0].contribs) { ps[0].contribs = { } }
     Object.assign(ps[0].contribs, ps[1]) // ps[1].filter((z) => z.count)
-/*
-    delete ps[0].derived_key
-    delete ps[0].iterations
-    delete ps[0].password_scheme
-    delete ps[0].roles
-    delete ps[0].salt
-    delete ps[0].type
-*/
     return putUser(ps[0])
   })
 
@@ -63,7 +55,7 @@ const refresh = (request, reply) => refreshImp(request.params.name)
     reply.redirect(`/user/${request.params.name}`)
   })
 
-const login = (request, reply) => {
+const authGithub = (request, reply) => {
   if (!request.auth.isAuthenticated) {
     return reply(boom.unauthorized('Authentication failed: ' + request.auth.error.message))
   }
@@ -75,37 +67,6 @@ const login = (request, reply) => {
     })
   return reply.redirect(`/user/${request.auth.credentials.profile.username}`)
 }
-
-/*
-const login = (request, reply) => request.auth.session.authenticate(
-  request.payload.name,
-  request.payload.password,
-  () => reply.redirect(`/user/${request.payload.name}`)
-)
-
-const registerUser = (request, reply) => {
-  if (request.payload.password && request.payload.password === request.payload.password2) {
-    return putUser({
-      _id: couchUser(request.payload.name),
-      name: request.payload.name,
-      password: request.payload.password,
-      roles: [],
-      type: 'user'
-    })
-      .then((r) => setInterval(refreshImp.bind(null, r._id.slice(17)), 86400000))
-      .then(() => login(request, reply))
-      .catch((e) => reply.redirect('/register'))
-  } else {
-    reply.redirect('/register')
-  }
-}
-
-const logout = (request, reply) => {
-  request.auth.session.clear()
-  // request.cookieAuth.clear() // bad
-  return reply.redirect('/')
-}
-*/
 
 const serverLoad = (request, reply) => {
   request.server.load.uptime = process.uptime()
@@ -140,9 +101,7 @@ const after = (server, next) => {
   debug('after...')
   server.auth.strategy('session', 'cookie', true, {
     password: process.env.SESSION_PASSWORD,
-    redirectTo: '/login',
     isSecure: false
-    // redirectOnTry: false
   })
 
   server.auth.strategy('github', 'bell', {
@@ -150,66 +109,7 @@ const after = (server, next) => {
     password: process.env.GITHUB_PASSWORD,
     clientId: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    // redirectTo: '/login',
     isSecure: false
-    // redirectOnTry: false
-  })
-
-/*
-  server.route({
-    method: 'GET',
-    path: '/register',
-    config: {
-      auth: { mode: 'try' },
-      handler: { view: { template: 'register' } },
-      description: 'Register sweet home (desc)',
-      tags: ['auth']
-    }
-  })
-
-  server.route({
-    method: 'POST',
-    path: '/register',
-    config: {
-      auth: { mode: 'try' },
-      handler: registerUser,
-      description: 'Register sweet home',
-      tags: ['auth']
-    }
-  })
-
-  server.route({
-    method: 'POST',
-    path: '/login',
-    config: {
-      auth: { mode: 'try' },
-      handler: login,
-      description: 'Login sweet home (desc)',
-      tags: ['auth']
-    }
-  })
-
-  server.route({
-    method: 'POST',
-    path: '/logout',
-    config: {
-      handler: logout,
-      tags: ['auth']
-    }
-  })
-*/
-
-  server.route({
-    method: 'GET',
-    path: '/login',
-    config: {
-      auth: 'github',
-      // auth: { mode: 'try' },
-      // handler: { view: { template: 'login' } },
-      handler: login,
-      description: 'Login sweet home (desc)',
-      tags: ['auth']
-    }
   })
 
   server.route({
@@ -230,9 +130,20 @@ const after = (server, next) => {
 
   server.route({
     method: 'GET',
+    path: '/auth/github',
+    config: {
+      auth: 'github',
+      handler: authGithub,
+      description: 'Auth with github (desc)',
+      tags: ['auth', 'github', 'user']
+    }
+  })
+
+  server.route({
+    method: 'GET',
     path: '/',
     config: {
-      auth: 'session',
+      auth: { mode: 'try' },
       handler: { view: { template: 'home' } },
       description: 'Home sweet home (desc)',
       notes: 'Home sweet home, a note',
