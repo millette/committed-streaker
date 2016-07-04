@@ -46,16 +46,17 @@ const refreshImp = (name) => Promise.all([
 
 const dailyUpdates = (onStart) => {
   userDB.list({ startkey: 'org.couchdb.user:' }, (err, body) => {
-    if (err) { return debug('dailyUpdates error:', err) }
+    if (err) { return debug('dailyUpdates error: %s', err) }
     // const delay = 21600000 / body.rows.length // spread over 6h
+    const delay = 5400000 / body.rows.length // spread over 90m
     // const delay = 1800000 / body.rows.length // spread over 30m
-    const delay = 19440000 / body.rows.length // spread over 5.4h
+    // const delay = 19440000 / body.rows.length // spread over 5.4h
     // const delay = 86400000 / body.rows.length // spread over 1d
 
     shuffle(body.rows).forEach((r, k) => {
-      debug('setup contrib updates for', r)
+      debug('setup contrib updates for %s', r)
       setTimeout((name) => {
-        debug('contrib updates ready for', name)
+        debug('contrib updates ready for %s', name)
         if (onStart) { refreshImp(name) }
         setInterval(refreshImp.bind(null, name), 86400000)
       }, k * delay, couchUserToName(r))
@@ -66,7 +67,7 @@ const dailyUpdates = (onStart) => {
 const refresh = (request, reply) => refreshImp(request.params.name)
   .then(() => reply.redirect(`/user/${request.params.name}`))
   .catch((err) => {
-    debug('refresh error:', err)
+    debug('refresh error: %s', err)
     reply.redirect(`/user/${request.params.name}`)
   })
 
@@ -114,7 +115,7 @@ const user = (request, reply) => getUser(request.params.name)
     reply.view('user', { user: doc }).etag(body._rev)
   })
   .catch((err) => {
-    debug('get user error:', err)
+    debug('get user error: %s', err)
     reply.redirect('/')
   })
 
@@ -248,16 +249,15 @@ const after = (server, next) => {
 const userChanges = () => {
   const usersFeed = userDB.follow({ include_docs: true, since: 'now' })
   usersFeed.on('change', (change) => {
-    debug('CHANGE:', change.seq)
-    // debug('CHANGE-FULL:', change)
     if (change.doc && change.doc.contribs) { return }
     if (change.delete) { return }
+    debug('CHANGE %s %s', change.id, change.seq)
     fetchContribs(change.doc.name)
       .then((contribs) => {
         change.doc.contribs = contribs
         putUser(change.doc)
-          .then((body) => debug('BODY:', body.id, body.rev))
-          .catch((err) => debug('insert user contribs error:', err))
+          .then((body) => debug('BODY %s %s', body.id, body.rev))
+          .catch((err) => debug('insert user contribs error: %s', err))
       })
   })
   usersFeed.follow()
