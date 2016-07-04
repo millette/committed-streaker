@@ -6,8 +6,10 @@ const boom = require('boom')
 const streak = require('rollodeqc-gh-user-streak')
 const debug = require('debug')('yummy')
 const pick = require('lodash.pick')
-// const shuffle = require('lodash.shuffle')
 const nano = require('nano')('http://localhost:5984')
+const shuffle = require('lodash.shuffle')
+
+const couchUserToName = (resp) => resp.id.slice(17) // 'org.couchdb.user:'.length === 17
 
 const userDB = nano.use('u2')
 
@@ -20,8 +22,6 @@ const fetchContribs = (name) => streak.fetchContribs(name)
 
 const couchUser = (name) => `org.couchdb.user:${name}`
 
-// const couchUserToName = (resp) => resp.id.slice(17) // 'org.couchdb.user:'.length === 17
-
 const getUser = (name) => new Promise((resolve, reject) => {
   userDB.get(couchUser(name), (err, change) => {
     if (err) { return reject(err) }
@@ -30,6 +30,9 @@ const getUser = (name) => new Promise((resolve, reject) => {
 })
 
 const putUser = (userDoc) => new Promise((resolve, reject) => {
+  const now = new Date().toISOString().split('.')[0] + 'Z'
+  if (!userDoc.created_at) { userDoc.created_at = now }
+  userDoc.updated_at = now
   userDB.insert(userDoc, (err, change) => {
     if (err) { return reject(err) }
     resolve(change)
@@ -42,6 +45,14 @@ const refreshImp = (name) => Promise.all([
   .then((ps) => {
     if (!ps[0].contribs) { ps[0].contribs = { } }
     Object.assign(ps[0].contribs, ps[1]) // ps[1].filter((z) => z.count)
+/*
+    delete ps[0].derived_key
+    delete ps[0].iterations
+    delete ps[0].password_scheme
+    delete ps[0].roles
+    delete ps[0].salt
+    delete ps[0].type
+*/
     return putUser(ps[0])
   })
 
@@ -57,7 +68,11 @@ const login = (request, reply) => {
     return reply(boom.unauthorized('Authentication failed: ' + request.auth.error.message))
   }
 
-  request.cookieAuth.set(request.auth.credentials)
+  request.cookieAuth.set({ username: request.auth.credentials.profile.username })
+  getUser(request.auth.credentials.profile.username)
+    .then((userDoc) => {
+      putUser(Object.assign(userDoc, request.auth.credentials.profile))
+    })
   return reply.redirect(`/user/${request.auth.credentials.profile.username}`)
 }
 
@@ -101,6 +116,15 @@ const serverLoadJson = (request, reply) => {
   request.server.load.uptime = process.uptime()
   reply(request.server.load)
 }
+
+const userFull = (request, reply) => getUser(request.params.name)
+  .then((body) => {
+    reply.view('user', { user: body }).etag(body._rev)
+  })
+  .catch((err) => {
+    debug('get user error: %s', err)
+    reply.redirect('/')
+  })
 
 const user = (request, reply) => getUser(request.params.name)
   .then((body) => {
@@ -253,6 +277,23 @@ const after = (server, next) => {
     }
   })
 
+  server.route({
+    method: 'GET',
+    path: '/user/{name}/full',
+    config: {
+      handler: userFull,
+      description: 'Userfull',
+      tags: ['user'],
+      validate: {
+        params: {
+          name: joi.string()
+            .required()
+            .description('The username for \'it\'.')
+        }
+      }
+    }
+  })
+
   next()
 }
 
@@ -261,6 +302,7 @@ const userChanges = () => {
   usersFeed.on('change', (change) => {
     if (change.doc && change.doc.contribs) { return }
     if (change.delete) { return }
+    if (change.id.indexOf('_design/') === 0) { return }
     debug('CHANGE %s %s', change.id, change.seq)
     fetchContribs(change.doc.name)
       .then((contribs) => {
@@ -273,8 +315,8 @@ const userChanges = () => {
   usersFeed.follow()
 }
 
-/*
 const dailyUpdates = (onStart) => {
+  if (onStart === 'dont') { return }
   userDB.list({ startkey: 'org.couchdb.user:' }, (err, body) => {
     if (err) { return debug('dailyUpdates error: %s', err) }
     // const delay = 21600000 / body.rows.length // spread over 6h
@@ -293,12 +335,11 @@ const dailyUpdates = (onStart) => {
     })
   })
 }
-*/
 
 exports.register = (server, options, next) => {
   debug('register...')
   userChanges()
-  // dailyUpdates(true)
+  dailyUpdates('dont')
   server.dependency(['hapi-auth-cookie', 'bell', 'hapi-context-credentials', 'vision', 'visionary'], after)
   next()
 }
