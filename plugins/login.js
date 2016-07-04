@@ -45,42 +45,12 @@ const refreshImp = (name) => Promise.all([
     return putUser(ps[0])
   })
 
-/*
-const dailyUpdates = (onStart) => {
-  userDB.list({ startkey: 'org.couchdb.user:' }, (err, body) => {
-    if (err) { return debug('dailyUpdates error: %s', err) }
-    // const delay = 21600000 / body.rows.length // spread over 6h
-    const delay = 5400000 / body.rows.length // spread over 90m
-    // const delay = 1800000 / body.rows.length // spread over 30m
-    // const delay = 19440000 / body.rows.length // spread over 5.4h
-    // const delay = 86400000 / body.rows.length // spread over 1d
-
-    shuffle(body.rows).forEach((r, k) => {
-      debug('setup contrib updates for %s', r)
-      setTimeout((name) => {
-        debug('contrib updates ready for %s', name)
-        if (onStart) { refreshImp(name) }
-        setInterval(refreshImp.bind(null, name), 86400000)
-      }, k * delay, couchUserToName(r))
-    })
-  })
-}
-*/
-
 const refresh = (request, reply) => refreshImp(request.params.name)
   .then(() => reply.redirect(`/user/${request.params.name}`))
   .catch((err) => {
     debug('refresh error: %s', err)
     reply.redirect(`/user/${request.params.name}`)
   })
-
-/*
-const login = (request, reply) => request.auth.session.authenticate(
-  request.payload.name,
-  request.payload.password,
-  () => reply.redirect(`/user/${request.payload.name}`)
-)
-*/
 
 const login = (request, reply) => {
   if (!request.auth.isAuthenticated) {
@@ -92,6 +62,12 @@ const login = (request, reply) => {
 }
 
 /*
+const login = (request, reply) => request.auth.session.authenticate(
+  request.payload.name,
+  request.payload.password,
+  () => reply.redirect(`/user/${request.payload.name}`)
+)
+
 const registerUser = (request, reply) => {
   if (request.payload.password && request.payload.password === request.payload.password2) {
     return putUser({
@@ -108,9 +84,7 @@ const registerUser = (request, reply) => {
     reply.redirect('/register')
   }
 }
-*/
 
-/*
 const logout = (request, reply) => {
   request.auth.session.clear()
   // request.cookieAuth.clear() // bad
@@ -179,6 +153,26 @@ const after = (server, next) => {
       tags: ['auth']
     }
   })
+
+  server.route({
+    method: 'POST',
+    path: '/login',
+    config: {
+      auth: { mode: 'try' },
+      handler: login,
+      description: 'Login sweet home (desc)',
+      tags: ['auth']
+    }
+  })
+
+  server.route({
+    method: 'POST',
+    path: '/logout',
+    config: {
+      handler: logout,
+      tags: ['auth']
+    }
+  })
 */
 
   server.route({
@@ -193,19 +187,6 @@ const after = (server, next) => {
       tags: ['auth']
     }
   })
-
-/*
-  server.route({
-    method: 'POST',
-    path: '/login',
-    config: {
-      auth: { mode: 'try' },
-      handler: login,
-      description: 'Login sweet home (desc)',
-      tags: ['auth']
-    }
-  })
-*/
 
   server.route({
     method: 'POST',
@@ -222,17 +203,6 @@ const after = (server, next) => {
       }
     }
   })
-
-/*
-  server.route({
-    method: 'POST',
-    path: '/logout',
-    config: {
-      handler: logout,
-      tags: ['auth']
-    }
-  })
-*/
 
   server.route({
     method: 'GET',
@@ -302,6 +272,28 @@ const userChanges = () => {
   })
   usersFeed.follow()
 }
+
+/*
+const dailyUpdates = (onStart) => {
+  userDB.list({ startkey: 'org.couchdb.user:' }, (err, body) => {
+    if (err) { return debug('dailyUpdates error: %s', err) }
+    // const delay = 21600000 / body.rows.length // spread over 6h
+    const delay = 5400000 / body.rows.length // spread over 90m
+    // const delay = 1800000 / body.rows.length // spread over 30m
+    // const delay = 19440000 / body.rows.length // spread over 5.4h
+    // const delay = 86400000 / body.rows.length // spread over 1d
+
+    shuffle(body.rows).forEach((r, k) => {
+      debug('setup contrib updates for %s', r)
+      setTimeout((name) => {
+        debug('contrib updates ready for %s', name)
+        if (onStart) { refreshImp(name) }
+        setInterval(refreshImp.bind(null, name), 86400000)
+      }, k * delay, couchUserToName(r))
+    })
+  })
+}
+*/
 
 exports.register = (server, options, next) => {
   debug('register...')
