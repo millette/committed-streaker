@@ -33,6 +33,7 @@ const putUser = (userDoc) => new Promise((resolve, reject) => {
   const now = new Date().toISOString().split('.')[0] + 'Z'
   if (!userDoc.created_at) { userDoc.created_at = now }
   userDoc.updated_at = now
+  if (!userDoc._id) { userDoc._id = couchUser(userDoc.name) }
   userDB.insert(userDoc, (err, change) => {
     if (err) { return reject(err) }
     resolve(change)
@@ -63,9 +64,31 @@ const authGithub = (request, reply) => {
   request.cookieAuth.set({ username: request.auth.credentials.profile.username })
   getUser(request.auth.credentials.profile.username)
     .then((userDoc) => {
+      debug('authgithub put user %s', request.auth.credentials.profile.username)
       putUser(Object.assign(userDoc, request.auth.credentials.profile))
+      return reply.redirect(`/user/${request.auth.credentials.profile.username}`)
     })
-  return reply.redirect(`/user/${request.auth.credentials.profile.username}`)
+    .catch((err) => {
+      debug('ERROR authgithub put user %s', request.auth.credentials.profile.username)
+      if (err.statusCode === 404) {
+        debug('ERROR 404 authgithub put user %s', request.auth.credentials.profile.username)
+        const userDoc = request.auth.credentials.profile
+        userDoc.username = request.auth.credentials.profile.username
+        userDoc.name = request.auth.credentials.profile.username
+        putUser(userDoc)
+          .then((a) => {
+            debug('AUTH PUT')
+            return reply.redirect(`/user/${request.auth.credentials.profile.username}`)
+          })
+          .catch((e) => {
+            debug('AUTH PUT %s', e)
+            return reply.redirect(`/user/${request.auth.credentials.profile.username}`)
+          })
+      } else {
+        debug('ERROR OTHER authgithub put user %s %s', request.auth.credentials.profile.username, err.statusCode)
+        return reply(boom.badImplementation('Oups: ', err))
+      }
+    })
 }
 
 const serverLoad = (request, reply) => {
@@ -211,10 +234,11 @@ const after = (server, next) => {
 const userChanges = () => {
   const usersFeed = userDB.follow({ include_docs: true, since: 'now' })
   usersFeed.on('change', (change) => {
+    debug('1) CHANGE %s', Object.keys(change).join(', '))
     if (change.doc && change.doc.contribs) { return }
     if (change.delete) { return }
     if (change.id.indexOf('_design/') === 0) { return }
-    debug('CHANGE %s %s', change.id, change.seq)
+    debug('2) CHANGE %s %s', change.id, change.seq)
     fetchContribs(change.doc.name)
       .then((contribs) => {
         change.doc.contribs = contribs
@@ -230,8 +254,9 @@ const dailyUpdates = (onStart) => {
   if (onStart === 'dont') { return }
   userDB.list({ startkey: 'org.couchdb.user:' }, (err, body) => {
     if (err) { return debug('dailyUpdates error: %s', err) }
-    // const delay = 21600000 / body.rows.length // spread over 6h
-    const delay = 5400000 / body.rows.length // spread over 90m
+    const delay = 21600000 / body.rows.length // spread over 6h
+    // const delay = 5400000 / body.rows.length // spread over 90m
+    // const delay = 12600000 / body.rows.length // spread over 3.5h
     // const delay = 1800000 / body.rows.length // spread over 30m
     // const delay = 19440000 / body.rows.length // spread over 5.4h
     // const delay = 86400000 / body.rows.length // spread over 1d
@@ -250,7 +275,7 @@ const dailyUpdates = (onStart) => {
 exports.register = (server, options, next) => {
   debug('register...')
   userChanges()
-  dailyUpdates('dont')
+  dailyUpdates(false) // 'dont'
   server.dependency(['hapi-auth-cookie', 'bell', 'hapi-context-credentials', 'vision', 'visionary'], after)
   next()
 }
