@@ -120,11 +120,11 @@ const user = (request, reply) => getUser(request.params.name)
     reply.redirect('/')
   })
 
-const after = (server, next) => {
+const after = (options, server, next) => {
   debug('after...')
   server.auth.strategy('session', 'cookie', true, {
     password: process.env.SESSION_PASSWORD,
-    isSecure: false
+    isSecure: options.secureCookies
   })
 
   server.auth.strategy('github', 'bell', {
@@ -132,7 +132,7 @@ const after = (server, next) => {
     password: process.env.GITHUB_PASSWORD,
     clientId: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    isSecure: false
+    isSecure: options.secureCookies
   })
 
   server.route({
@@ -277,7 +277,7 @@ exports.register = (server, options, next) => {
   debug('register...')
   userChanges()
   dailyUpdates('dont')
-  server.dependency(['hapi-auth-cookie', 'bell', 'hapi-context-credentials', 'vision', 'visionary'], after)
+  server.dependency(['hapi-auth-cookie', 'bell', 'hapi-context-credentials', 'vision', 'visionary'], after.bind(null, options))
   next()
 }
 

@@ -18,7 +18,14 @@ const manifest = {
     { plugin: 'hapi-auth-cookie' },
     { plugin: 'bell' },
     { plugin: 'hapi-context-app' },
-    { plugin: './plugins/login' },
+    {
+      plugin: {
+        register: './plugins/login',
+        options: {
+          secureCookies: isProd
+        }
+      }
+    },
     { plugin: 'vision' },
     {
       plugin: {
