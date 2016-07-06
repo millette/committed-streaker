@@ -12,7 +12,7 @@ const manifest = {
     app: { siteTitle: 'Committed Streaker' },
     load: { sampleInterval: 1000 }
   },
-  connections: [{ port: 3030, address: '127.0.0.1' }],
+  connections: [{ port: 3040, address: '127.0.0.1' }],
   registrations: [
     { plugin: 'hapi-context-credentials' },
     { plugin: 'hapi-auth-cookie' },
