@@ -22,7 +22,7 @@ const manifest = {
       plugin: {
         register: './plugins/login',
         options: {
-          secureCookies: isProd
+          secureCookies: false
         }
       }
     },
