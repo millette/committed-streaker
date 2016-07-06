@@ -234,7 +234,7 @@ const after = (server, next) => {
 const userChanges = () => {
   const usersFeed = userDB.follow({ include_docs: true, since: 'now' })
   usersFeed.on('change', (change) => {
-    debug('1) CHANGE %s', Object.keys(change).join(', '))
+    // debug('1) CHANGE %s', Object.keys(change).join(', '))
     if (change.doc && change.doc.contribs) { return }
     if (change.delete) { return }
     if (change.id.indexOf('_design/') === 0) { return }
@@ -252,17 +252,18 @@ const userChanges = () => {
 
 const dailyUpdates = (onStart) => {
   if (onStart === 'dont') { return }
-  userDB.list({ startkey: 'org.couchdb.user:' }, (err, body) => {
+  userDB.list({ startkey: 'org.couchdb.user:', endkey: 'org.couchdb.user:\ufff0' }, (err, body) => {
     if (err) { return debug('dailyUpdates error: %s', err) }
-    const delay = 21600000 / body.rows.length // spread over 6h
+    // const delay = 21600000 / body.rows.length // spread over 6h
     // const delay = 5400000 / body.rows.length // spread over 90m
     // const delay = 12600000 / body.rows.length // spread over 3.5h
     // const delay = 1800000 / body.rows.length // spread over 30m
     // const delay = 19440000 / body.rows.length // spread over 5.4h
+    const delay = 61200000 / body.rows.length // spread over 17h
     // const delay = 86400000 / body.rows.length // spread over 1d
 
     shuffle(body.rows).forEach((r, k) => {
-      debug('setup contrib updates for %s', r)
+      debug('setup contrib updates for %s', r.id)
       setTimeout((name) => {
         debug('contrib updates ready for %s', name)
         if (onStart) { refreshImp(name) }
@@ -275,7 +276,7 @@ const dailyUpdates = (onStart) => {
 exports.register = (server, options, next) => {
   debug('register...')
   userChanges()
-  dailyUpdates(false) // 'dont'
+  dailyUpdates('dont')
   server.dependency(['hapi-auth-cookie', 'bell', 'hapi-context-credentials', 'vision', 'visionary'], after)
   next()
 }
