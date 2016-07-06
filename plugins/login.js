@@ -153,7 +153,7 @@ const after = (options, server, next) => {
 
   server.route({
     method: 'GET',
-    path: '/auth/github',
+    path: '/login/github/callback',
     config: {
       auth: 'github',
       handler: authGithub,
