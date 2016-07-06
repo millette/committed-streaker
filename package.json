@@ -14,7 +14,7 @@
   },
   "scripts": {
     "lint": "standard",
-    "start": "standard && rejoice -c manifest.json -p $(pwd)",
+    "start": "forever node_modules/.bin/rejoice -c manifest.json -p $(pwd)",
     "test": "standard && nyc ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
@@ -34,6 +34,7 @@
     "boom": "^3.2.2",
     "debug": "^2.2.0",
     "ejs": "^2.4.2",
+    "forever": "^0.15.2",
     "good": "^7.0.1",
     "good-console": "^6.1.2",
     "good-squeeze": "^4.0.0",
@@ -55,9 +56,9 @@
   },
   "devDependencies": {
     "ava": "^0.15.2",
+    "babel-eslint": "^6.1.0",
     "coveralls": "^2.11.9",
     "nyc": "^6.6.1",
-    "babel-eslint": "^6.1.0",
     "standard": "^7.1.2"
   },
   "standard": {
