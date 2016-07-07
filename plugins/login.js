@@ -6,12 +6,13 @@ const boom = require('boom')
 const streak = require('rollodeqc-gh-user-streak')
 const debug = require('debug')('yummy')
 const pick = require('lodash.pick')
-const nano = require('nano')('http://localhost:5984')
+// const nano = require('nano')('http://localhost:5984')
+const userDB = require('nano')('http://localhost:5984/u2')
 const shuffle = require('lodash.shuffle')
 
 const couchUserToName = (resp) => resp.id.slice(17) // 'org.couchdb.user:'.length === 17
 
-const userDB = nano.use('u2')
+// const userDB = nano.use('u2')
 
 const fetchContribs = (name) => streak.fetchContribs(name)
   .then((contribs) => {
@@ -255,11 +256,11 @@ const dailyUpdates = (onStart) => {
   userDB.list({ startkey: 'org.couchdb.user:', endkey: 'org.couchdb.user:\ufff0' }, (err, body) => {
     if (err) { return debug('dailyUpdates error: %s', err) }
     // const delay = 21600000 / body.rows.length // spread over 6h
-    // const delay = 5400000 / body.rows.length // spread over 90m
+    const delay = 5400000 / body.rows.length // spread over 90m
     // const delay = 12600000 / body.rows.length // spread over 3.5h
     // const delay = 1800000 / body.rows.length // spread over 30m
     // const delay = 19440000 / body.rows.length // spread over 5.4h
-    const delay = 61200000 / body.rows.length // spread over 17h
+    // const delay = 61200000 / body.rows.length // spread over 17h
     // const delay = 86400000 / body.rows.length // spread over 1d
 
     shuffle(body.rows).forEach((r, k) => {

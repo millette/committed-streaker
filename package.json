@@ -14,6 +14,7 @@
   },
   "scripts": {
     "lint": "standard",
+    "dev": "standard && DEBUG=yummy rejoice -c manifest.json -p $(pwd)",
     "start": "forever node_modules/.bin/rejoice -c manifest.json -p $(pwd)",
     "test": "standard && nyc ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls"

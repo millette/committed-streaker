@@ -76,6 +76,6 @@ const devRegistrations = [
 
 if (!isProd) { manifest.registrations = manifest.registrations.concat(devRegistrations) }
 
-fs.writeFile('manifest.json', JSON.stringify(manifest, null, '  '), (err) => {
+fs.writeFile('manifest.json', JSON.stringify(manifest, null, '  '), () => {
   console.log(`${isProd ? 'prod' : 'dev'} "manifest.json" written`)
 })
