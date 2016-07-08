@@ -1,6 +1,4 @@
 <%- include('partials/doctype') %>
-<body>
-<h1><%= app.siteTitle %></h1>
 
 <% if (user.name && user.name === credentials.username) { %>
 <p><a href="/user/<%= user.name %>/full">Full</a></p>
@@ -22,8 +20,4 @@
 <%= JSON.stringify(credentials, null, ' ') %>
 </pre>
 
-<footer>
-<%- include('partials/nav') %>
-</footer>
-</body>
-</html>
+<%- include('partials/bottom') %>

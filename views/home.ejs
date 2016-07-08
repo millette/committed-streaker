@@ -1,7 +1,4 @@
 <%- include('partials/doctype') %>
-<body>
-<h1><%= app.siteTitle %></h1>
-
 <% if (typeof credentials === 'object' && credentials && Object.keys(credentials).length) { %>
 <h2>credentials</h2>
 <pre>
@@ -25,8 +22,4 @@
 </pre>
 <% } %>
 
-<footer>
-<%- include('partials/nav') %>
-</footer>
-</body>
-</html>
+<%- include('partials/bottom') %>

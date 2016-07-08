@@ -9,7 +9,17 @@ const isProd = process.argv[2] === 'prod'
 
 const manifest = {
   server: {
-    app: { siteTitle: 'Committed Streaker' },
+    app: {
+      siteTitle: 'Committed Streaker',
+      nav: {
+        left: [
+          { path: '/', text: 'Accueil' },
+          { path: '/load', text: 'Charge du serveur' },
+          { path: '/user/millette', text: 'User millette' }
+        ],
+        right: [ ]
+      }
+    },
     load: { sampleInterval: 1000 }
   },
   connections: [{ port: 3040, address: '127.0.0.1' }],
@@ -21,9 +31,7 @@ const manifest = {
     {
       plugin: {
         register: './plugins/login',
-        options: {
-          secureCookies: false
-        }
+        options: { secureCookies: false }
       }
     },
     { plugin: 'vision' },
@@ -46,9 +54,7 @@ const devRegistrations = [
   {
     plugin: {
       register: 'hapi-favicon',
-      options: {
-        path: './favicon.ico'
-      }
+      options: { path: './favicon.ico' }
     }
   },
   {
@@ -74,7 +80,10 @@ const devRegistrations = [
   }
 ]
 
-if (!isProd) { manifest.registrations = manifest.registrations.concat(devRegistrations) }
+if (!isProd) {
+  manifest.registrations = manifest.registrations.concat(devRegistrations)
+  manifest.server.app.nav.right.push({ path: '/docs', text: 'API docs' })
+}
 
 fs.writeFile('manifest.json', JSON.stringify(manifest, null, '  '), () => {
   console.log(`${isProd ? 'prod' : 'dev'} "manifest.json" written`)
