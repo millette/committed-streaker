@@ -6,13 +6,10 @@ const boom = require('boom')
 const streak = require('rollodeqc-gh-user-streak')
 const debug = require('debug')('yummy')
 const pick = require('lodash.pick')
-// const nano = require('nano')('http://localhost:5984')
 const userDB = require('nano')('http://localhost:5984/u2')
 const shuffle = require('lodash.shuffle')
 
 const couchUserToName = (resp) => resp.id.slice(17) // 'org.couchdb.user:'.length === 17
-
-// const userDB = nano.use('u2')
 
 const fetchContribs = (name) => streak.fetchContribs(name)
   .then((contribs) => {
@@ -121,6 +118,16 @@ const user = (request, reply) => getUser(request.params.name)
     return reply(boom.notFound(err))
   })
 
+const me = (request, reply) => getUser(request.auth.credentials.username)
+  .then((body) => {
+    const doc = pick(body, ['name', 'contribs', '_rev'])
+    reply.view('user', { user: doc, me: true }).etag(body._rev)
+  })
+  .catch((err) => {
+    debug('get user error: %s', err)
+    return reply(boom.notFound(err))
+  })
+
 const preResponse = (request, reply) => {
   if (!request.response.isBoom) { return reply.continue() }
   return reply.view('error', {
@@ -205,6 +212,16 @@ const after = (options, server, next) => {
 
   server.route({
     method: 'GET',
+    path: '/me',
+    config: {
+      handler: me,
+      description: 'User sweet home (desc)',
+      tags: ['user']
+    }
+  })
+
+  server.route({
+    method: 'GET',
     path: '/user/{name}',
     config: {
       handler: user,
@@ -236,8 +253,6 @@ const after = (options, server, next) => {
       }
     }
   })
-
-  server.ext('onPreResponse', preResponse)
 
   next()
 }
@@ -289,6 +304,7 @@ exports.register = (server, options, next) => {
   userChanges()
   dailyUpdates('dont')
   server.dependency(['hapi-auth-cookie', 'bell', 'hapi-context-credentials', 'vision', 'visionary'], after.bind(null, options))
+  server.ext('onPreResponse', preResponse)
   next()
 }
 

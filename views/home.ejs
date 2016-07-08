@@ -1,11 +1,9 @@
 <%- include('partials/doctype') %>
 <div class="row column">
 
-<% if (typeof credentials === 'object' && credentials && Object.keys(credentials).length) { %>
-<h2>credentials</h2>
-<pre>
-<%= JSON.stringify(credentials, null, ' ') %>
-</pre>
+<% if (credentials && credentials.username) { %>
+<p>Voir <a href="/me">votre profile</a> (<%= credentials.username%>).</p>
+
 <% } else { %>
 <p><a href="/login/github/callback">Login github</a></p>
 <% } %>

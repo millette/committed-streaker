@@ -27,6 +27,11 @@
       <% app.nav.right.forEach((l) => { %>
         <li><a href="<%- l.path %>"><%- l.text %></a></li>
       <% }) %>
+      <% if (typeof credentials === 'object' && credentials && credentials.username) { %>
+        <li><a href="/me">Mon profile</a></li>
+      <% } else { %>
+        <li><a href="/login/github/callback">Login</a></li>
+      <% } %>
       </ul>
     </div>
   </div>

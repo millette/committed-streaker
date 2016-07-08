@@ -1,6 +1,9 @@
 <%- include('partials/doctype') %>
 <div class="row column">
 
+<% if (me) { %>
+  <p>Hello, me!</p>
+<% } %>
 <% if (user.name && user.name === credentials.username) { %>
 <p><a href="/user/<%= user.name %>/full">Full</a></p>
 <form method="post" action="/user/<%= user.name %>/refresh">
