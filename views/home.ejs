@@ -1,4 +1,6 @@
 <%- include('partials/doctype') %>
+<div class="row column">
+
 <% if (typeof credentials === 'object' && credentials && Object.keys(credentials).length) { %>
 <h2>credentials</h2>
 <pre>
@@ -21,5 +23,7 @@
 <%= JSON.stringify(params, null, ' ') %>
 </pre>
 <% } %>
+
+</div>
 
 <%- include('partials/bottom') %>
