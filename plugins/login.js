@@ -108,7 +108,7 @@ const userFull = (request, reply) => getUser(request.params.name)
   })
   .catch((err) => {
     debug('get user error: %s', err)
-    reply.redirect('/')
+    return reply(boom.notFound(err))
   })
 
 const user = (request, reply) => getUser(request.params.name)
@@ -118,8 +118,16 @@ const user = (request, reply) => getUser(request.params.name)
   })
   .catch((err) => {
     debug('get user error: %s', err)
-    reply.redirect('/')
+    return reply(boom.notFound(err))
   })
+
+const preResponse = (request, reply) => {
+  if (!request.response.isBoom) { return reply.continue() }
+  return reply.view('error', {
+    app: request.server.settings.app,
+    output: request.response.output.payload
+  })
+}
 
 const after = (options, server, next) => {
   debug('after...')
@@ -228,6 +236,8 @@ const after = (options, server, next) => {
       }
     }
   })
+
+  server.ext('onPreResponse', preResponse)
 
   next()
 }
