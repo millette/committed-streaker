@@ -1,9 +1,12 @@
 <%- include('partials/doctype') %>
 <div class="row column">
-
+<% if (output.statusCode === 401) { %>
+<p><a href="/login/github/callback">Login avec Github</a></p>
+<p><%= output.message %></p>
+<% } else { %>
 <pre>
 <%= JSON.stringify(output, null, '  ') %>
 </pre>
-
+<% } %>
 </div>
 <%- include('partials/bottom') %>
