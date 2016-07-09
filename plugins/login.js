@@ -39,20 +39,11 @@ const putUser = (userDoc) => new Promise((resolve, reject) => {
   })
 })
 
-const refreshImp = (name) => Promise.all([
-  getUser(name), fetchContribs(name)
-])
+const refresh = (name) => Promise.all([getUser(name), fetchContribs(name)])
   .then((ps) => {
     if (!ps[0].contribs) { ps[0].contribs = { } }
     Object.assign(ps[0].contribs, ps[1]) // ps[1].filter((z) => z.count)
     return putUser(ps[0])
-  })
-
-const refresh = (request, reply) => refreshImp(request.params.name)
-  .then(() => reply.redirect(`/user/${request.params.name}`))
-  .catch((err) => {
-    debug('refresh error: %s', err)
-    reply.redirect(`/user/${request.params.name}`)
   })
 
 const authGithub = (request, reply) => {
@@ -101,9 +92,7 @@ const serverLoadJson = (request, reply) => {
 }
 
 const userFull = (request, reply) => getUser(request.params.name)
-  .then((body) => {
-    reply.view('user', { user: body, me: false }).etag(body._rev)
-  })
+  .then((body) => reply.view('user', { user: body, me: false }).etag(body._rev))
   .catch((err) => {
     debug('get user error: %s', err)
     return reply(boom.notFound(err))
@@ -149,20 +138,18 @@ const daily = (request, reply) => {
 }
 
 const user = (request, reply) => getUser(request.params.name)
-  .then((body) => {
-    const doc = pick(body, ['name', 'contribs', '_rev'])
-    reply.view('user', { user: doc, me: false }).etag(body._rev)
-  })
+  .then((body) => reply
+    .view('user', { user: pick(body, ['name', 'contribs', '_rev']), me: false })
+    .etag(body._rev))
   .catch((err) => {
     debug('get user error: %s', err)
     return reply(boom.notFound(err))
   })
 
 const me = (request, reply) => getUser(request.auth.credentials.username)
-  .then((body) => {
-    const doc = pick(body, ['name', 'contribs', '_rev'])
-    reply.view('user', { user: doc, me: true }).etag(body._rev)
-  })
+  .then((body) => reply
+    .view('user', { user: pick(body, ['name', 'contribs', '_rev']), me: true })
+    .etag(body._rev))
   .catch((err) => {
     debug('get user error: %s', err)
     return reply(boom.notFound(err))
@@ -190,22 +177,6 @@ const after = (options, server, next) => {
     clientId: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
     isSecure: options.secureCookies
-  })
-
-  server.route({
-    method: 'POST',
-    path: '/user/{name}/refresh',
-    config: {
-      handler: refresh,
-      tags: ['user'],
-      validate: {
-        params: {
-          name: joi.string()
-            .required()
-            .description('The username for \'it\'.')
-        }
-      }
-    }
   })
 
   server.route({
@@ -371,8 +342,8 @@ const dailyUpdates = (onStart) => {
       debug('setup contrib updates for %s', r.id)
       setTimeout((name) => {
         debug('contrib updates ready for %s', name)
-        if (onStart) { refreshImp(name) }
-        setInterval(refreshImp.bind(null, name), dayUnit)
+        if (onStart) { refresh(name) }
+        setInterval(refresh.bind(null, name), dayUnit)
       }, k * delay, couchUserToName(r))
     })
   })

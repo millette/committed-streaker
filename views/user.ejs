@@ -2,16 +2,10 @@
 <div class="row column">
 
 <% if (me) { %>
-  <p>Hello, me!</p>
+<p>Hello, <a href="/user/<%- user.name%>"><%- user.name%></a>!</p>
 <% } %>
 <% if (user.name && user.name === credentials.username) { %>
 <p><a href="/user/<%= user.name %>/full">Full</a></p>
-<form method="post" action="/user/<%= user.name %>/refresh">
-<input type="submit" value="refresh">
-</form>
-<!-- form method="post" action="/logout">
-<input type="submit" value="logout">
-</form -->
 <% } %>
 
 <h2>user</h2>
