@@ -1,0 +1,23 @@
+<%- include('partials/doctype') %>
+<div class="row column">
+<h1>Codeurs actifs le <%- date %></h1>
+
+<ol>
+<% commits.forEach((commit) => { %>
+  <li>
+    <a href="/user/<%= commit.username %>"><%= commit.username %></a>
+    a fait <%= commit.commits %> commits
+  </li>
+<% }) %>
+</ol>
+
+<ul class="pagination" role="navigation" aria-label="Pagination">
+  <% if (yesterday) { %>
+  <li class="pagination-previous"><a href="/day/<%- yesterday %>">Jour précédent</a></li>
+  <% } %>
+  <% if (tomorrow) { %>
+  <li class="pagination-next"><a href="/day/<%- tomorrow %>">Jour suivant</a></li>
+  <% } %>
+</ul>
+</div>
+<%- include('partials/bottom') %>

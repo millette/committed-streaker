@@ -9,6 +9,7 @@ const pick = require('lodash.pick')
 const userDB = require('nano')('http://localhost:5984/u2')
 const shuffle = require('lodash.shuffle')
 
+const dayUnit = 86400000
 const couchUserToName = (resp) => resp.id.slice(17) // 'org.couchdb.user:'.length === 17
 
 const fetchContribs = (name) => streak.fetchContribs(name)
@@ -101,17 +102,56 @@ const serverLoadJson = (request, reply) => {
 
 const userFull = (request, reply) => getUser(request.params.name)
   .then((body) => {
-    reply.view('user', { user: body }).etag(body._rev)
+    reply.view('user', { user: body, me: false }).etag(body._rev)
   })
   .catch((err) => {
     debug('get user error: %s', err)
     return reply(boom.notFound(err))
   })
 
+const daily = (request, reply) => {
+  const now = new Date()
+  if (!request.params.year) { request.params.year = now.getFullYear() }
+  if (!request.params.month) { request.params.month = now.getMonth() + 1 }
+  if (!request.params.day) { request.params.day = now.getDate() }
+
+  const d = new Date(request.params.year, request.params.month - 1, request.params.day)
+  const tomorrow = (now.getTime() - d.getTime()) / dayUnit > 1
+    ? new Date(d.getTime() + dayUnit).toISOString().split('T')[0].replace(/-/g, '/')
+    : false
+  const yesterday = (now.getTime() - d.getTime()) / dayUnit < 400
+    ? new Date(d.getTime() - dayUnit).toISOString().split('T')[0].replace(/-/g, '/')
+    : false
+
+  const options = {
+    descending: true,
+    startkey: [request.params.year, request.params.month, request.params.day + 1],
+    endkey: [request.params.year, request.params.month, request.params.day]
+  }
+  if (request.params.limit) { options.limit = request.params.limit }
+  userDB.view('app', 'commitsByDate', options, (err, body) => {
+    if (err) {
+      debug('dbview error: %s', err)
+      return reply(boom.badImplementation('Oups: ', err))
+    }
+    reply.view('day', {
+      yesterday: yesterday,
+      tomorrow: tomorrow,
+      date: d.toLocaleDateString(),
+      commits: body.rows.map((x) => {
+        return {
+          username: couchUserToName(x),
+          commits: x.key[3]
+        }
+      })
+    }).etag(d + request.params.limit)
+  })
+}
+
 const user = (request, reply) => getUser(request.params.name)
   .then((body) => {
     const doc = pick(body, ['name', 'contribs', '_rev'])
-    reply.view('user', { user: doc }).etag(body._rev)
+    reply.view('user', { user: doc, me: false }).etag(body._rev)
   })
   .catch((err) => {
     debug('get user error: %s', err)
@@ -255,6 +295,44 @@ const after = (options, server, next) => {
     }
   })
 
+  server.route({
+    method: 'GET',
+    path: '/today/{limit?}',
+    config: {
+      handler: daily,
+      description: 'Dailies',
+      tags: ['commits'],
+      validate: {
+        params: {
+          limit: joi.number()
+            .default(25)
+        }
+      }
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    path: '/day/{year}/{month}/{day}/{limit?}',
+    config: {
+      handler: daily,
+      description: 'Dailies',
+      tags: ['commits'],
+      validate: {
+        params: {
+          year: joi.number()
+            .required(),
+          month: joi.number()
+            .required(),
+          day: joi.number()
+            .required(),
+          limit: joi.number()
+            .default(25)
+        }
+      }
+    }
+  })
+
   next()
 }
 
@@ -287,14 +365,14 @@ const dailyUpdates = (onStart) => {
     // const delay = 1800000 / body.rows.length // spread over 30m
     // const delay = 19440000 / body.rows.length // spread over 5.4h
     // const delay = 61200000 / body.rows.length // spread over 17h
-    // const delay = 86400000 / body.rows.length // spread over 1d
+    // const delay = dayUnit / body.rows.length // spread over 1d
 
     shuffle(body.rows).forEach((r, k) => {
       debug('setup contrib updates for %s', r.id)
       setTimeout((name) => {
         debug('contrib updates ready for %s', name)
         if (onStart) { refreshImp(name) }
-        setInterval(refreshImp.bind(null, name), 86400000)
+        setInterval(refreshImp.bind(null, name), dayUnit)
       }, k * delay, couchUserToName(r))
     })
   })

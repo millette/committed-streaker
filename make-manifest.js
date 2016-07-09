@@ -15,7 +15,7 @@ const manifest = {
         left: [
           { path: '/', text: 'Accueil' },
           { path: '/load', text: 'Charge du serveur' },
-          { path: '/user/millette', text: 'User millette' }
+          { path: '/today', text: 'Codeurs actifs' }
         ],
         right: [ ]
       }
