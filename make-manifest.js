@@ -54,7 +54,7 @@ const devRegistrations = [
   {
     plugin: {
       register: 'hapi-favicon',
-      options: { path: './favicon.ico' }
+      options: { path: './favicon.ico', auth: false }
     }
   },
   {
