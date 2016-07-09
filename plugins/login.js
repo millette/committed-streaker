@@ -131,6 +131,7 @@ const me = (request, reply) => getUser(request.auth.credentials.username)
 const preResponse = (request, reply) => {
   if (!request.response.isBoom) { return reply.continue() }
   return reply.view('error', {
+    credentials: request.auth.isAuthenticated ? request.auth.credentials : false,
     app: request.server.settings.app,
     output: request.response.output.payload
   })
@@ -280,8 +281,8 @@ const dailyUpdates = (onStart) => {
   if (onStart === 'dont') { return }
   userDB.list({ startkey: 'org.couchdb.user:', endkey: 'org.couchdb.user:\ufff0' }, (err, body) => {
     if (err) { return debug('dailyUpdates error: %s', err) }
-    // const delay = 21600000 / body.rows.length // spread over 6h
-    const delay = 5400000 / body.rows.length // spread over 90m
+    const delay = 21600000 / body.rows.length // spread over 6h
+    // const delay = 5400000 / body.rows.length // spread over 90m
     // const delay = 12600000 / body.rows.length // spread over 3.5h
     // const delay = 1800000 / body.rows.length // spread over 30m
     // const delay = 19440000 / body.rows.length // spread over 5.4h
