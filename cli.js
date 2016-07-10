@@ -5,4 +5,5 @@
 // self
 const utils = require('./lib/utils')
 
-utils.dailyUpdates('do')
+utils.dailyUpdates()
+setInterval(utils.dailyUpdates, utils.dayUnit / 4)
