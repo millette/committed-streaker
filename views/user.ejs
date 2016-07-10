@@ -1,13 +1,20 @@
 <%- include('partials/doctype') %>
 <div class="row column">
 
+<h1><%= user.name %></h1>
 <% if (me) { %>
-<p>Hello, <a href="/user/<%- user.name%>"><%- user.name%></a>!</p>
+<p>Hello, <a href="/user/<%- user.name%>"><%= user.name %></a>!</p>
 <% } %>
 <% if (user.name && user.name === credentials.username) { %>
 <p><a href="/user/<%= user.name %>/full">Full</a></p>
 <% } %>
 
+<h2>user</h2>
+<pre>
+<%= JSON.stringify(user, null, ' ') %>
+</pre>
+
+<% if (streaks) { %>
 <h2>Streaks</h2>
 <% streaks.forEach((streak) => {
   if (streak.commits.length < 2) { return }
@@ -31,13 +38,8 @@
       <span class="stat"><%= Math.round(10 * commits / streak.commits.length) / 10 %></span> commits/jour
     </div>
   </div>
-  <!-- hr -->
 <% }) %>
-
-<h2>user</h2>
-<pre>
-<%= JSON.stringify(user, null, ' ') %>
-</pre>
+<% } %>
 
 <h2>credentials</h2>
 <pre>

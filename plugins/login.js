@@ -91,12 +91,14 @@ const serverLoadJson = (request, reply) => {
   reply(request.server.load)
 }
 
-const userFull = (request, reply) => getUser(request.params.name)
-  .then((body) => reply.view('user', { user: body, me: false }).etag(body._rev))
-  .catch((err) => {
-    debug('get user error: %s', err)
-    return reply(boom.notFound(err))
-  })
+const userFull = (request, reply) => request.auth.credentials.username === request.params.name
+  ? getUser(request.params.name)
+    .then((body) => reply.view('user', { streaks: false, user: body, me: false }).etag(body._rev))
+    .catch((err) => {
+      debug('get user error: %s', err)
+      return reply(boom.notFound(err))
+    })
+  : reply(boom.unauthorized(`Authentication failed: '${request.auth.credentials.username}' !== '${request.params.name}'`))
 
 const daily = (request, reply) => {
   const now = new Date()
@@ -173,7 +175,8 @@ const userImp = (me, request, reply) => {
     const d = new Date(Date.parse(v.begin) + (v.commits.length - 1) * dayUnit).toISOString().split('T')[0]
     if (d === m) { s.forEach((r) => { if (r.begin === v.begin) { r.current = true } }) }
     return reply
-      .view('user', { streaks: s, user: pick(x[0], ['name', 'contribs', '_rev']), me: me })
+      // .view('user', { streaks: s, user: pick(x[0], ['name', 'contribs', '_rev']), me: me })
+      .view('user', { streaks: s, user: pick(x[0], ['name', '_rev']), me: me })
       .etag(x[0]._rev)
   })
   .catch((err) => {
