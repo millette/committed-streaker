@@ -6,45 +6,9 @@ const boom = require('boom')
 const streak = require('rollodeqc-gh-user-streak')
 const debug = require('debug')('yummy')
 const pick = require('lodash.pick')
-const userDB = require('nano')('http://localhost:5984/u2')
-const shuffle = require('lodash.shuffle')
 
-const dayUnit = 86400000
-const couchUserToName = (resp) => resp.id.slice(17) // 'org.couchdb.user:'.length === 17
-
-const fetchContribs = (name) => streak.fetchContribs(name)
-  .then((contribs) => {
-    const contribs2 = { }
-    contribs.forEach((c) => { contribs2[c.date] = c.count })
-    return contribs2
-  })
-
-const couchUser = (name) => `org.couchdb.user:${name}`
-
-const getUser = (name) => new Promise((resolve, reject) => {
-  userDB.get(couchUser(name), (err, change) => {
-    if (err) { return reject(err) }
-    resolve(change)
-  })
-})
-
-const putUser = (userDoc) => new Promise((resolve, reject) => {
-  const now = new Date().toISOString().split('.')[0] + 'Z'
-  if (!userDoc.created_at) { userDoc.created_at = now }
-  userDoc.updated_at = now
-  if (!userDoc._id) { userDoc._id = couchUser(userDoc.name) }
-  userDB.insert(userDoc, (err, change) => {
-    if (err) { return reject(err) }
-    resolve(change)
-  })
-})
-
-const refresh = (name) => Promise.all([getUser(name), fetchContribs(name)])
-  .then((ps) => {
-    if (!ps[0].contribs) { ps[0].contribs = { } }
-    Object.assign(ps[0].contribs, ps[1]) // ps[1].filter((z) => z.count)
-    return putUser(ps[0])
-  })
+// self
+const utils = require('../lib/utils')
 
 const authGithub = (request, reply) => {
   if (!request.auth.isAuthenticated) {
@@ -52,10 +16,10 @@ const authGithub = (request, reply) => {
   }
 
   request.cookieAuth.set({ username: request.auth.credentials.profile.username })
-  getUser(request.auth.credentials.profile.username)
+  utils.getUser(request.auth.credentials.profile.username)
     .then((userDoc) => {
       debug('authgithub put user %s', request.auth.credentials.profile.username)
-      putUser(Object.assign(userDoc, request.auth.credentials.profile))
+      utils.putUser(Object.assign(userDoc, request.auth.credentials.profile))
       return reply.redirect(`/user/${request.auth.credentials.profile.username}`)
     })
     .catch((err) => {
@@ -65,7 +29,7 @@ const authGithub = (request, reply) => {
         const userDoc = request.auth.credentials.profile
         userDoc.username = request.auth.credentials.profile.username
         userDoc.name = request.auth.credentials.profile.username
-        putUser(userDoc)
+        utils.putUser(userDoc)
           .then((a) => {
             debug('AUTH PUT')
             return reply.redirect(`/user/${request.auth.credentials.profile.username}`)
@@ -92,7 +56,7 @@ const serverLoadJson = (request, reply) => {
 }
 
 const userFull = (request, reply) => request.auth.credentials.username === request.params.name
-  ? getUser(request.params.name)
+  ? utils.getUser(request.params.name)
     .then((body) => reply.view('user', { streaks: false, user: body, me: false }).etag(body._rev))
     .catch((err) => {
       debug('get user error: %s', err)
@@ -107,11 +71,11 @@ const daily = (request, reply) => {
   if (!request.params.day) { request.params.day = now.getDate() }
 
   const d = new Date(request.params.year, request.params.month - 1, request.params.day)
-  const tomorrow = (now.getTime() - d.getTime()) / dayUnit > 1
-    ? new Date(d.getTime() + dayUnit).toISOString().split('T')[0].replace(/-/g, '/')
+  const tomorrow = (now.getTime() - d.getTime()) / utils.dayUnit > 1
+    ? new Date(d.getTime() + utils.dayUnit).toISOString().split('T')[0].replace(/-/g, '/')
     : false
-  const yesterday = (now.getTime() - d.getTime()) / dayUnit < 400
-    ? new Date(d.getTime() - dayUnit).toISOString().split('T')[0].replace(/-/g, '/')
+  const yesterday = (now.getTime() - d.getTime()) / utils.dayUnit < 400
+    ? new Date(d.getTime() - utils.dayUnit).toISOString().split('T')[0].replace(/-/g, '/')
     : false
 
   const options = {
@@ -121,7 +85,7 @@ const daily = (request, reply) => {
     endkey: [request.params.year, request.params.month, request.params.day]
   }
   if (request.params.limit) { options.limit = request.params.limit }
-  userDB.view('app', 'commitsByDate', options, (err, body) => {
+  utils.userDB.view('app', 'commitsByDate', options, (err, body) => {
     if (err) {
       debug('dbview error: %s', err)
       return reply(boom.badImplementation('Oups: ', err))
@@ -132,7 +96,7 @@ const daily = (request, reply) => {
       date: d.toLocaleDateString(),
       commits: body.rows.map((x) => {
         return {
-          username: couchUserToName(x),
+          username: utils.couchUserToName(x),
           commits: x.key[3]
         }
       })
@@ -142,7 +106,7 @@ const daily = (request, reply) => {
 
 const userImp = (me, request, reply) => {
   const username = me ? request.auth.credentials.username : request.params.name
-  return getUser(username)
+  return utils.getUser(username)
   .then((body) => {
     const cc = []
     let r
@@ -172,10 +136,9 @@ const userImp = (me, request, reply) => {
       if (a < b) { return -1 }
       return 0
     }).reverse()[0]
-    const d = new Date(Date.parse(v.begin) + (v.commits.length - 1) * dayUnit).toISOString().split('T')[0]
+    const d = new Date(Date.parse(v.begin) + (v.commits.length - 1) * utils.dayUnit).toISOString().split('T')[0]
     if (d === m) { s.forEach((r) => { if (r.begin === v.begin) { r.current = true } }) }
     return reply
-      // .view('user', { streaks: s, user: pick(x[0], ['name', 'contribs', '_rev']), me: me })
       .view('user', { streaks: s, user: pick(x[0], ['name', '_rev']), me: me })
       .etag(x[0]._rev)
   })
@@ -341,17 +304,17 @@ const after = (options, server, next) => {
 }
 
 const userChanges = () => {
-  const usersFeed = userDB.follow({ include_docs: true, since: 'now' })
+  const usersFeed = utils.userDB.follow({ include_docs: true, since: 'now' })
   usersFeed.on('change', (change) => {
     // debug('1) CHANGE %s', Object.keys(change).join(', '))
     if (change.doc && change.doc.contribs) { return }
     if (change.delete) { return }
     if (change.id.indexOf('_design/') === 0) { return }
     debug('2) CHANGE %s %s', change.id, change.seq)
-    fetchContribs(change.doc.name)
+    utils.fetchContribs(change.doc.name)
       .then((contribs) => {
         change.doc.contribs = contribs
-        putUser(change.doc)
+        utils.putUser(change.doc)
           .then((body) => debug('BODY %s %s', body.id, body.rev))
           .catch((err) => debug('insert user contribs error: %s', err))
       })
@@ -359,33 +322,10 @@ const userChanges = () => {
   usersFeed.follow()
 }
 
-const dailyUpdates = (onStart) => {
-  if (onStart === 'dont') { return }
-  userDB.list({ startkey: 'org.couchdb.user:', endkey: 'org.couchdb.user:\ufff0' }, (err, body) => {
-    if (err) { return debug('dailyUpdates error: %s', err) }
-    // const delay = 21600000 / body.rows.length // spread over 6h
-    const delay = 5400000 / body.rows.length // spread over 90m
-    // const delay = 12600000 / body.rows.length // spread over 3.5h
-    // const delay = 1800000 / body.rows.length // spread over 30m
-    // const delay = 19440000 / body.rows.length // spread over 5.4h
-    // const delay = 61200000 / body.rows.length // spread over 17h
-    // const delay = dayUnit / body.rows.length // spread over 1d
-
-    shuffle(body.rows).forEach((r, k) => {
-      debug('setup contrib updates for %s', r.id)
-      setTimeout((name) => {
-        debug('contrib updates ready for %s', name)
-        if (onStart) { refresh(name) }
-        setInterval(refresh.bind(null, name), dayUnit)
-      }, k * delay, couchUserToName(r))
-    })
-  })
-}
-
 exports.register = (server, options, next) => {
   debug('register...')
   userChanges()
-  dailyUpdates('dont')
+  // utils.dailyUpdates('dont')
   server.ext('onPreResponse', preResponse)
   server.dependency(['hapi-auth-cookie', 'bell', 'hapi-context-credentials', 'vision', 'visionary'], after.bind(null, options))
   next()
