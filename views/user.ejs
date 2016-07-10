@@ -8,6 +8,11 @@
 <p><a href="/user/<%= user.name %>/full">Full</a></p>
 <% } %>
 
+<h2>streaks</h2>
+<pre>
+<%= JSON.stringify(streaks, null, ' ') %>
+</pre>
+
 <h2>user</h2>
 <pre>
 <%= JSON.stringify(user, null, ' ') %>

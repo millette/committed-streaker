@@ -114,6 +114,7 @@ const daily = (request, reply) => {
 
   const options = {
     descending: true,
+    stale: 'update_after',
     startkey: [request.params.year, request.params.month, request.params.day + 1],
     endkey: [request.params.year, request.params.month, request.params.day]
   }
@@ -137,28 +138,43 @@ const daily = (request, reply) => {
   })
 }
 
-const user = (request, reply) => getUser(request.params.name)
-  .then((body) => reply
-    .view('user', { user: pick(body, ['name', 'contribs', '_rev']), me: false })
-    .etag(body._rev))
-  .catch((err) => {
-    debug('get user error: %s', err)
-    return reply(boom.notFound(err))
-  })
+const userImp = (me, request, reply) => {
+  const username = me ? request.auth.credentials.username : request.params.name
+  return getUser(username)
+  .then((body) => {
+    const cc = []
+    let r
+    for (r in body.contribs) {
+      cc.push({
+        date: r,
+        count: body.contribs[r]
+      })
+    }
+    const streaks = streak(cc.sort((a, b) => {
+      if (a.date > b.date) { return 1 }
+      if (a.date < b.date) { return -1 }
+      return 0
+    }))
 
-const me = (request, reply) => getUser(request.auth.credentials.username)
-  .then((body) => reply
-    .view('user', { user: pick(body, ['name', 'contribs', '_rev']), me: true })
-    .etag(body._rev))
-  .catch((err) => {
-    debug('get user error: %s', err)
-    return reply(boom.notFound(err))
+    return Promise.all([body, streaks])
   })
+  .then((x) => reply
+    .view('user', { streaks: x[1], user: pick(x[0], ['name', 'contribs', '_rev']), me: me })
+    .etag(x[0]._rev)
+  )
+  .catch((err) => {
+    debug('get user %s not found: %s', username, err)
+    return reply(boom.notFound(err, { username }))
+  })
+}
+
+const user = userImp.bind(null, false)
+const me = userImp.bind(null, true)
 
 const preResponse = (request, reply) => {
   if (!request.response.isBoom) { return reply.continue() }
   return reply.view('error', {
-    credentials: request.auth.isAuthenticated ? request.auth.credentials : false,
+    credentials: false,
     app: request.server.settings.app,
     output: request.response.output.payload
   })
@@ -330,8 +346,8 @@ const dailyUpdates = (onStart) => {
   if (onStart === 'dont') { return }
   userDB.list({ startkey: 'org.couchdb.user:', endkey: 'org.couchdb.user:\ufff0' }, (err, body) => {
     if (err) { return debug('dailyUpdates error: %s', err) }
-    const delay = 21600000 / body.rows.length // spread over 6h
-    // const delay = 5400000 / body.rows.length // spread over 90m
+    // const delay = 21600000 / body.rows.length // spread over 6h
+    const delay = 5400000 / body.rows.length // spread over 90m
     // const delay = 12600000 / body.rows.length // spread over 3.5h
     // const delay = 1800000 / body.rows.length // spread over 30m
     // const delay = 19440000 / body.rows.length // spread over 5.4h
@@ -353,8 +369,8 @@ exports.register = (server, options, next) => {
   debug('register...')
   userChanges()
   dailyUpdates('dont')
-  server.dependency(['hapi-auth-cookie', 'bell', 'hapi-context-credentials', 'vision', 'visionary'], after.bind(null, options))
   server.ext('onPreResponse', preResponse)
+  server.dependency(['hapi-auth-cookie', 'bell', 'hapi-context-credentials', 'vision', 'visionary'], after.bind(null, options))
   next()
 }
 
