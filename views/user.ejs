@@ -8,10 +8,31 @@
 <p><a href="/user/<%= user.name %>/full">Full</a></p>
 <% } %>
 
-<h2>streaks</h2>
-<pre>
-<%= JSON.stringify(streaks, null, ' ') %>
-</pre>
+<h2>Streaks</h2>
+<% streaks.forEach((streak) => {
+  if (streak.commits.length < 2) { return }
+  const commits = streak.commits.reduce((p, c) => p + c) %>
+  <div class="row callout<%= streak.current ? ' current success' : '' %>">
+    <div class="column small-4">
+      <h3>
+        <%= streak.begin %>
+        <% if (streak.current) { %>
+          <small>*</small>
+        <% } %>
+      </h3>
+    </div>
+    <div class="column small-2">
+      <span class="stat"><%= streak.commits.length %></span> jours
+    </div>
+    <div class="column small-3">
+      <span class="stat"><%= commits %></span> commits
+    </div>
+    <div class="column small-3">
+      <span class="stat"><%= Math.round(10 * commits / streak.commits.length) / 10 %></span> commits/jour
+    </div>
+  </div>
+  <!-- hr -->
+<% }) %>
 
 <h2>user</h2>
 <pre>

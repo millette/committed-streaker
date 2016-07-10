@@ -158,10 +158,24 @@ const userImp = (me, request, reply) => {
 
     return Promise.all([body, streaks])
   })
-  .then((x) => reply
-    .view('user', { streaks: x[1], user: pick(x[0], ['name', 'contribs', '_rev']), me: me })
-    .etag(x[0]._rev)
-  )
+  .then((x) => {
+    const s = x[1].streaks
+    const v = s.slice().sort((a, b) => {
+      if (a.begin > b.begin) { return 1 }
+      if (a.begin < b.begin) { return -1 }
+      return 0
+    }).reverse()[0]
+    const m = Object.keys(x[0].contribs).sort((a, b) => {
+      if (a > b) { return 1 }
+      if (a < b) { return -1 }
+      return 0
+    }).reverse()[0]
+    const d = new Date(Date.parse(v.begin) + (v.commits.length - 1) * dayUnit).toISOString().split('T')[0]
+    if (d === m) { s.forEach((r) => { if (r.begin === v.begin) { r.current = true } }) }
+    return reply
+      .view('user', { streaks: s, user: pick(x[0], ['name', 'contribs', '_rev']), me: me })
+      .etag(x[0]._rev)
+  })
   .catch((err) => {
     debug('get user %s not found: %s', username, err)
     return reply(boom.notFound(err, { username }))
