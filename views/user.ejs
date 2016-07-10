@@ -5,24 +5,33 @@
 <% if (me) { %>
 <p>Hello, <a href="/user/<%- user.name%>"><%= user.name %></a>!</p>
 <% } %>
-<% if (user.name && user.name === credentials.username) { %>
-<p><a href="/user/<%= user.name %>/full">Full</a></p>
-<% } %>
 
+<% if (user.raw) { %>
+<% if (user.name && user.name === credentials.username) { %>
+<p><a href="/user/<%= user.name %>">Streaks</a></p>
+<% } %>
 <h2>user</h2>
 <pre>
 <%= JSON.stringify(user, null, ' ') %>
 </pre>
-
-<% if (streaks) { %>
+<% } else if (user.name && user.name === credentials.username) { %>
+<p><a href="/user/<%= user.name %>/full">Full</a></p>
+<% } %>
+<% if (streaks) {
+  const gg = streaks.find((el) => el.current && el.commits.length > 1)
+  if (gg) { %>
+    <h2><a href="#current"><small>Streak de</small> <%= gg.commits.length %> jours <small>en cours!</small></a></h2>
+  <% } %>
 <h2>Streaks</h2>
 <% streaks.forEach((streak) => {
   if (streak.commits.length < 2) { return }
   const commits = streak.commits.reduce((p, c) => p + c) %>
-  <div class="row callout<%= streak.current ? ' current success' : '' %>">
+  <div <%- streak.current ? 'id="current"' : '' %> class="row callout<%= streak.current ? ' current success' : '' %>">
     <div class="column small-4">
       <h3>
+        <a href="/day/<%= streak.begin.replace(/-/g, '/') %>">
         <%= streak.begin %>
+        </a>
         <% if (streak.current) { %>
           <small>*</small>
         <% } %>
@@ -41,11 +50,12 @@
 <% }) %>
 <% } %>
 
+<!--
 <h2>credentials</h2>
 <pre>
 <%= JSON.stringify(credentials, null, ' ') %>
 </pre>
-
+-->
 </div>
 <%- include('partials/bottom') %>
 
