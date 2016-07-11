@@ -20,12 +20,5 @@ au cours des 365 derniers jours.</p>
 <%- include('partials/login') %>
 <% } %>
 
-<% if (typeof load === 'object') { %>
-<h2>load <small><a href="/load/json">JSON</a></small></h2>
-<pre>
-<%= JSON.stringify(load, null, ' ') %>
-</pre>
-<% } %>
-
 </div>
 <%- include('partials/bottom') %>

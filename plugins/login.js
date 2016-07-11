@@ -47,7 +47,7 @@ const authGithub = (request, reply) => {
 
 const serverLoad = (request, reply) => {
   request.server.load.uptime = process.uptime()
-  reply.view('home', { load: request.server.load })
+  reply.view('load', { load: request.server.load })
 }
 
 const serverLoadJson = (request, reply) => {
