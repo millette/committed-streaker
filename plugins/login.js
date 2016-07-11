@@ -84,23 +84,35 @@ const daily = (request, reply) => {
     startkey: [request.params.year, request.params.month, request.params.day + 1],
     endkey: [request.params.year, request.params.month, request.params.day]
   }
-  if (request.params.limit) { options.limit = request.params.limit }
+  // if (request.params.limit) { options.limit = request.params.limit }
   utils.userDB.view('app', 'commitsByDate', options, (err, body) => {
     if (err) {
       debug('dbview error: %s', err)
       return reply(boom.badImplementation('Oups: ', err))
     }
-    reply.view('day', {
+
+    let commits
+    if (request.params.limit) {
+      commits = body.rows.slice(0, request.params.limit)
+    } else {
+      commits = body.rows.slice()
+    }
+
+    commits = commits.map((x) => {
+      return {
+        username: utils.couchUserToName(x),
+        commits: x.key[3]
+      }
+    })
+
+    const rep = reply.view('day', {
+      total: body.rows.length,
       yesterday: yesterday,
       tomorrow: tomorrow,
       date: d.toLocaleDateString(),
-      commits: body.rows.map((x) => {
-        return {
-          username: utils.couchUserToName(x),
-          commits: x.key[3]
-        }
-      })
-    }).etag(d + request.params.limit)
+      commits: commits
+    })
+    if ((now.getTime() - d.getTime()) / utils.dayUnit > 3) { rep.etag(d + request.params.limit) }
   })
 }
 
