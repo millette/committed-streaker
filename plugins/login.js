@@ -65,7 +65,7 @@ const userFull = (request, reply) => request.auth.credentials.username === reque
   : reply(boom.unauthorized(`Authentication failed: '${request.auth.credentials.username}' !== '${request.params.name}'`))
 
 const daily = (request, reply) => {
-  const now = new Date()
+  const now = new Date(new Date().getTime() - utils.dayUnit / 8)
   if (!request.params.year) { request.params.year = now.getFullYear() }
   if (!request.params.month) { request.params.month = now.getMonth() + 1 }
   if (!request.params.day) { request.params.day = now.getDate() }
@@ -165,11 +165,36 @@ const me = userImp.bind(null, true)
 
 const preResponse = (request, reply) => {
   if (!request.response.isBoom) { return reply.continue() }
+  switch (request.response.output.payload.statusCode) {
+    case 401:
+      reply.view('401', {
+        credentials: false,
+        app: request.server.settings.app,
+        output: request.response.output.payload
+      })
+      break
+
+    case 404:
+      reply.view('404', {
+        app: request.server.settings.app,
+        output: request.response.output.payload
+      })
+      break
+
+    default:
+      reply.view('error', {
+        credentials: false,
+        app: request.server.settings.app,
+        output: request.response.output.payload
+      })
+  }
+  /*
   return reply.view('error', {
     credentials: false,
     app: request.server.settings.app,
     output: request.response.output.payload
   })
+  */
 }
 
 const after = (options, server, next) => {
@@ -337,7 +362,6 @@ const userChanges = () => {
 exports.register = (server, options, next) => {
   debug('register...')
   userChanges()
-  // utils.dailyUpdates('dont')
   server.ext('onPreResponse', preResponse)
   server.dependency(['hapi-auth-cookie', 'bell', 'hapi-context-credentials', 'vision', 'visionary'], after.bind(null, options))
   next()

@@ -1,7 +1,6 @@
 <%- include('partials/doctype') %>
 <div class="row column">
-<pre>
-<%= JSON.stringify(output, null, '  ') %>
-</pre>
+<%- include('partials/login') %>
+<p><%= output.message %></p>
 </div>
 <%- include('partials/bottom') %>

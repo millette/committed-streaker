@@ -1,11 +1,23 @@
 <%- include('partials/doctype') %>
 <div class="row column">
+<div class="row">
+<div class="column medium-6 lead">
+<p>Êtes-vous un ou une <i>committed streaker</i>?</p>
+<p>Découvrez les programmeurs et programmeuses du Québec.</p>
+</div>
+<div class="column medium-6">
+<p><i>Committed streaker</i> est un service du <a href="http://www.rollodeqc.com/">RoLLodeQc</a>,
+le bottin des codeurs Québécois.</p>
+<p>Prenez part aux 5000 personnes du Québec qui ont contribué sur Github
+au cours des 365 derniers jours.</p>
+</div>
+</div>
 
 <% if (credentials && credentials.username) { %>
 <p>Voir <a href="/me">votre profile</a> (<%= credentials.username%>).</p>
 
 <% } else { %>
-<p><a href="/login/github/callback">Login avec Github</a></p>
+<%- include('partials/login') %>
 <% } %>
 
 <% if (typeof load === 'object') { %>
@@ -15,13 +27,5 @@
 </pre>
 <% } %>
 
-<% if (typeof params === 'object' && params && Object.keys(params).length) { %>
-<h2>params</h2>
-<pre>
-<%= JSON.stringify(params, null, ' ') %>
-</pre>
-<% } %>
-
 </div>
-
 <%- include('partials/bottom') %>
