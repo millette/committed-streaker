@@ -123,7 +123,9 @@ const daily = (request, reply) => {
 }
 
 const userImp = (me, request, reply) => {
-  const username = me ? request.auth.credentials.username : request.params.name
+  const username = me
+    ? request.auth.credentials.username
+    : request.params.name || 'millette'
   return utils.getUser(username)
   .then((body) => {
     const cc = []
@@ -296,6 +298,17 @@ const after = (options, server, next) => {
             .description('The username for \'it\'.')
         }
       }
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    path: '/user/millette',
+    config: {
+      auth: { mode: 'try' },
+      handler: user,
+      description: 'User millette (desc)',
+      tags: ['user']
     }
   })
 
