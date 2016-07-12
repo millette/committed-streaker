@@ -61,5 +61,8 @@ const dailyUpdates = (options) => utils.userDB.view(
   }
 )
 
-dailyUpdates({ descending: true, endkey: 6 })
+const dailySome = dailyUpdates.bind(null, { descending: true, endkey: 6 })
+
+// dailySome()
 setInterval(dailyUpdates, utils.dayUnit)
+setTimeout(() => setInterval(dailySome, utils.dayUnit), utils.dayUnit / 12)
