@@ -46,11 +46,17 @@ const authGithub = (request, reply) => {
 }
 
 const serverLoad = (request, reply) => {
+  if (!request.auth.isAuthenticated || !request.auth.credentials || request.auth.credentials.username !== 'millette') {
+    return reply(boom.unauthorized('Authentication failed for this page.'))
+  }
   request.server.load.uptime = process.uptime()
   reply.view('load', { load: request.server.load })
 }
 
 const serverLoadJson = (request, reply) => {
+  if (!request.auth.isAuthenticated || !request.auth.credentials || request.auth.credentials.username !== 'millette') {
+    return reply(boom.unauthorized('Authentication failed for this page.'))
+  }
   request.server.load.uptime = process.uptime()
   reply(request.server.load)
 }
