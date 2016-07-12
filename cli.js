@@ -35,28 +35,31 @@ const dailyUpdates = () => utils.userDB.view('app', 'probs', (err, body) => {
 })
 */
 
-const dailyUpdates = () => utils.userDB.view('app', 'probs', (err, body) => {
-  if (err) { return debug('dailyUpdates error: %s', err) }
-  const data = body.rows.reverse()
-  const delay = 500
+const dailyUpdates = (options) => utils.userDB.view(
+  'app', 'probs', options || {},
+  (err, body) => {
+    if (err) { return debug('dailyUpdates error: %s', err) }
+    const data = body.rows.reverse()
+    const delay = 500
 
-  data.forEach((r, k) => {
-    debug('setup contrib updates for %s', r.id)
-    setTimeout((name) => {
-      debug('contrib updates ready for %s', name)
-      utils.refresh(name)
-    }, k * delay, utils.couchUserToName(r))
-  })
-
-  setTimeout((name) => {
-    utils.cdb.db.compact('u2', (err, body) => {
-      if (err) { return debug('Compacting Error: %s', err) }
-      debug('(%s) Compacting OK: %s', new Date().toISOString(), JSON.stringify(body))
+    data.forEach((r, k) => {
+      debug('setup contrib updates for %s', r.id)
+      setTimeout((name) => {
+        debug('contrib updates ready for %s', name)
+        utils.refresh(name)
+      }, k * delay, utils.couchUserToName(r))
     })
-  }, 60000 + data.length * delay)
 
-  debug('(%s) nItems: %s; delay: %s', new Date().toISOString(), data.length, delay)
-})
+    setTimeout((name) => {
+      utils.cdb.db.compact('u2', (err, body) => {
+        if (err) { return debug('Compacting Error: %s', err) }
+        debug('(%s) Compacting OK: %s', new Date().toISOString(), JSON.stringify(body))
+      })
+    }, 60000 + data.length * delay)
 
-dailyUpdates()
+    debug('(%s) nItems: %s; delay: %s', new Date().toISOString(), data.length, delay)
+  }
+)
+
+dailyUpdates({ descending: true, endkey: 6 })
 setInterval(dailyUpdates, utils.dayUnit)
