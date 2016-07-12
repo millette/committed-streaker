@@ -7,15 +7,15 @@
 <p>Hello, <a href="/user/<%- user.name%>"><%= user.name %></a>!</p>
 <% } %>
 
-<% if (user.raw) { %>
-<% if (user.name && user.name === credentials.username) { %>
+<% if (user && user.raw) { %>
+<% if (credentials && typeof credentials === 'object' && credentials.username && user.name && user.name === credentials.username) { %>
 <p><a href="/user/<%= user.name %>">Streaks</a></p>
 <% } %>
 <h2>user</h2>
 <pre>
 <%= JSON.stringify(user, null, ' ') %>
 </pre>
-<% } else if (user.name && user.name === credentials.username) { %>
+<% } else if (user && credentials && typeof credentials === 'object' && credentials.username && user.name && user.name === credentials.username) { %>
 <p><a href="/user/<%= user.name %>/full">Full</a></p>
 <% } %>
 <% if (streaks) {
