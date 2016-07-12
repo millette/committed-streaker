@@ -39,7 +39,7 @@ const dailyUpdates = (options) => utils.userDB.view(
   'app', 'probs', options || {},
   (err, body) => {
     if (err) { return debug('dailyUpdates error: %s', err) }
-    const data = body.rows.reverse()
+    const data = body.rows
     const delay = 500
 
     data.forEach((r, k) => {
