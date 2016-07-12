@@ -46,6 +46,12 @@ const manifest = {
           isCached: isProd
         }
       }
+    },
+    {
+      plugin: {
+        register: 'hapi-favicon',
+        options: { path: './favicon.ico', auth: false }
+      }
     }
   ]
 }
@@ -53,12 +59,6 @@ const manifest = {
 const devRegistrations = [
   { plugin: 'inert' },
   { plugin: 'lout' },
-  {
-    plugin: {
-      register: 'hapi-favicon',
-      options: { path: './favicon.ico', auth: false }
-    }
-  },
   {
     plugin: {
       register: 'good',
