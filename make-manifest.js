@@ -14,10 +14,12 @@ const manifest = {
       nav: {
         left: [
           { path: '/', text: 'Accueil' },
-          { path: '/load', text: 'Charge du serveur' },
+          // { path: '/load', text: 'Charge du serveur' },
           { path: '/today', text: 'Codeurs actifs' }
         ],
-        right: [ ]
+        right: [
+          { path: '/a-propos', text: 'À propos' }
+        ]
       }
     },
     load: { sampleInterval: 1000 }

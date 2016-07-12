@@ -237,6 +237,17 @@ const after = (options, server, next) => {
 
   server.route({
     method: 'GET',
+    path: '/a-propos',
+    config: {
+      auth: { mode: 'try' },
+      handler: { view: { template: 'about' } },
+      description: 'About',
+      tags: ['app']
+    }
+  })
+
+  server.route({
+    method: 'GET',
     path: '/load',
     config: {
       handler: serverLoad,
@@ -303,6 +314,7 @@ const after = (options, server, next) => {
     method: 'GET',
     path: '/today/{limit?}',
     config: {
+      auth: { mode: 'try' },
       handler: daily,
       description: 'Dailies',
       tags: ['commits'],

@@ -2,6 +2,7 @@
 <div class="row column">
 
 <h1><%= user.name %></h1>
+<p class="lead">Voir le profil <a href="https://github.com/<%= user.name %>"><%= user.name %> chez Github</a>.</p>
 <% if (me) { %>
 <p>Hello, <a href="/user/<%- user.name%>"><%= user.name %></a>!</p>
 <% } %>
