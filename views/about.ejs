@@ -1,0 +1,52 @@
+<%- include('partials/doctype') %>
+<div class="row column">
+<h1>À propos de <i>Committed Streaker</i></h1>
+<p class="lead">Le <i>Committed Streaker</i> permet de garder un oeil sur la vivacité
+de la communauté de développeurs du Québec et sur son propre progrès.
+Il s'inscrit dans la famille des services RoLLodeQc.</p>
+
+<p>Le projet <a href="http://www.rollodeqc.com/">RoLLodeQc</a> trouve ses racines dans le bottin d'entreprises du Libre
+de Linux-Québec, au début des années 2000.
+Plus récemment, un prototype a été mis en ligne pour coïncider avec la <a href="http://2015.sqil.info/">SQIL 2015</a>.
+Depuis 3-4 mois, le travail s'est accéléré sur une nouvelle architecture dont voici le premier exemple.</p>
+
+<p>Le RoLLodeQc s'appuie sur plus de 9000 développeurs inscrits sur Github.
+Le 19 mai dernier, <a href="https://github.com/blog/2173-more-contributions-on-your-profile">Github a retiré le <i>commit streak</i> des profils utilisateurs</a>
+et c'est à ce moment que l'idée du <i>Committed Streaker</i> a germé.
+</p>
+<div class="row">
+<div class="column medium-6">
+<h2>Sources</h2>
+<p>Obtenez les sources:</p>
+<ul>
+  <li><a href="https://github.com/millette/committed-streaker">Application web</a></li>
+  <li><a href="https://github.com/millette/rollodeqc-gh-user-streak">Ligne de commande</a></li>
+  <li><a href="https://github.com/millette?tab=repositories">Autres sources liées au RoLLodeQc</a></li>
+  <li><a href="https://www.npmjs.com/browse/keyword/rollodeqc">Ensemble de logiciels npm</a></li>
+  <li><a href="http://www.rollodeqc.com/faq.html">FAQ du RoLLodeQc</a></li>
+</ul>
+</div>
+
+<div class="column medium-6">
+<h2>Colophon</h2>
+<p>Ce service repose sur plusieurs logiciels libres:</p>
+<ul>
+  <li><a href="https://nodejs.org/en/">NodeJS</a></li>
+  <li><a href="http://hapijs.com/">HapiJS</a></li>
+  <li><a href="https://www.debian.org/">Debian GNU/Linux</a></li>
+  <li><a href="http://nginx.org/">Nginx</a></li>
+  <li><a href="http://couchdb.apache.org/">CouchDB</a></li>
+  <li><a href="http://foundation.zurb.com/sites.html">Zurb Foundation</a></li>
+</ul>
+</div>
+</div>
+
+<% if (credentials && credentials.username) { %>
+<p>Voir <a href="/me">votre profile</a> (<%= credentials.username%>).</p>
+
+<% } else { %>
+<%- include('partials/login') %>
+<% } %>
+
+</div>
+<%- include('partials/bottom') %>
