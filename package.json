@@ -15,9 +15,7 @@
   "scripts": {
     "lint": "standard",
     "dev": "standard && DEBUG=yummy rejoice -c manifest.json -p $(pwd)",
-    "start": "forever node_modules/.bin/rejoice -c manifest.json -p $(pwd)",
-    "test": "standard && nyc ava",
-    "coverage": "nyc report --reporter=text-lcov | coveralls"
+    "start": "forever node_modules/.bin/rejoice -c manifest.json -p $(pwd)"
   },
   "keywords": [
     "streaking",
@@ -56,10 +54,7 @@
     "visionary": "^6.0.0"
   },
   "devDependencies": {
-    "ava": "^0.15.2",
-    "babel-eslint": "^6.1.0",
-    "coveralls": "^2.11.9",
-    "nyc": "^6.6.1",
+    "babel-eslint": "^6.1.2",
     "standard": "^7.1.2"
   },
   "standard": {
