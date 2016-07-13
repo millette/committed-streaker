@@ -36,7 +36,7 @@ const dailyUpdates = () => utils.userDB.view('app', 'probs', (err, body) => {
 */
 
 const dailyUpdates = (options) => utils.userDB.view(
-  'app', 'probs', options || {},
+  'app', 'probs', options || { descending: true },
   (err, body) => {
     if (err) { return debug('dailyUpdates error: %s', err) }
     const data = body.rows
@@ -55,14 +55,17 @@ const dailyUpdates = (options) => utils.userDB.view(
         if (err) { return debug('Compacting Error: %s', err) }
         debug('(%s) Compacting OK: %s', new Date().toISOString(), JSON.stringify(body))
       })
-    }, 60000 + data.length * delay)
+    }, (10 + data.length) * delay)
 
     debug('(%s) nItems: %s; delay: %s', new Date().toISOString(), data.length, delay)
   }
 )
 
-const dailySome = dailyUpdates.bind(null, { descending: true, endkey: 6 })
+const dailySome = dailyUpdates.bind(null, { descending: true, endkey: 6 }) // 5000
+const dailyWorked = dailyUpdates.bind(null, { descending: true, endkey: 75 }) // 200-400
+const dailyZero = dailyUpdates.bind(null, { endkey: 75 }) // 4000
 
-// dailySome()
-setInterval(dailyUpdates, utils.dayUnit)
-setTimeout(() => setInterval(dailySome, utils.dayUnit), utils.dayUnit / 12)
+// dailyWorked()
+setTimeout(() => setInterval(dailySome, utils.dayUnit), 4 * utils.dayUnit / 24)
+setInterval(dailyWorked, utils.dayUnit / 4)
+setInterval(dailyZero, utils.dayUnit * 7)

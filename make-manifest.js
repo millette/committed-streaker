@@ -14,7 +14,6 @@ const manifest = {
       nav: {
         left: [
           { path: '/', text: 'Accueil' },
-          // { path: '/load', text: 'Charge du serveur' },
           { path: '/today', text: 'Codeurs actifs' }
         ],
         right: [
