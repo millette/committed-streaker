@@ -13,7 +13,7 @@ const dailyUpdates = (options) => utils.userDB.view(
   'app', 'probs', options || { descending: true },
   (err, body) => {
     if (err) { return debug('dailyUpdates error: %s', err) }
-    const data = sample(body.rows, Math.floor(data.length / 2))
+    const data = sample(body.rows, Math.floor(body.rows.length / 2))
     const delay = 600
 
     data.forEach((r, k) => {
