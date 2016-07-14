@@ -20,7 +20,7 @@ const authGithub = (request, reply) => {
     .then((userDoc) => {
       debug('authgithub put user %s', request.auth.credentials.profile.username)
       utils.putUser(Object.assign(userDoc, request.auth.credentials.profile))
-      return reply.redirect(`/user/${request.auth.credentials.profile.username}`)
+      return reply.redirect('/me')
     })
     .catch((err) => {
       debug('ERROR authgithub put user %s', request.auth.credentials.profile.username)
