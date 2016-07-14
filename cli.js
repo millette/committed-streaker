@@ -3,6 +3,7 @@
 'use strict'
 
 // npm
+const sample = require('lodash.samplesize')
 const debug = require('debug')('yummy')
 
 // self
@@ -42,7 +43,7 @@ const dailyUpdates = (options) => utils.userDB.view(
     const data = body.rows
     const delay = 400
 
-    data.forEach((r, k) => {
+    sample(data, Math.floor(data.length / 2)).forEach((r, k) => {
       debug('setup contrib updates for %s', r.id)
       setTimeout((name) => {
         debug('contrib updates ready for %s', name)
