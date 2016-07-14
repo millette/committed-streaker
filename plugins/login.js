@@ -158,8 +158,9 @@ const userImp = (me, request, reply) => {
     }).reverse()[0]
     const d = new Date(Date.parse(v.begin) + (v.commits.length - 1) * utils.dayUnit).toISOString().split('T')[0]
     if (d === m) { s.forEach((r) => { if (r.begin === v.begin) { r.current = true } }) }
+    // if (username === 'millette') { x[0].public = true }
     return reply
-      .view('user', { streaks: s, user: pick(x[0], ['name', '_rev']), me: me })
+      .view('user', { streaks: s, user: pick(x[0], ['name', '_rev', 'public']), me: me })
       .etag(x[0]._rev)
   })
   .catch((err) => {
@@ -192,6 +193,25 @@ const preResponse = (request, reply) => {
       view = 'error'
   }
   reply.view(view, obj).code(code)
+}
+
+const userPub = (request, reply) => {
+  if (request.auth.credentials.username !== request.params.name) {
+    return reply(boom.unauthorized(`Authentication failed: '${request.auth.credentials.username}' !== '${request.params.name}'`))
+  }
+  // get the user
+  // set public field (true/false)
+  // save user
+  // reply accordingly
+  const username = request.params.name
+
+  utils.getUser(username)
+    .then((u) => {
+      u.public = request.payload.publicUser
+      return utils.putUser(u)
+    })
+    .then((x) => reply({ name: request.params.name, public: request.payload.publicUser }))
+    .catch((e) => reply(boom.badImplementation(`Oups changing public state for ${username}: ${e}`)))
 }
 
 const after = (options, server, next) => {
@@ -309,6 +329,27 @@ const after = (options, server, next) => {
       description: 'Userfull',
       tags: ['user'],
       validate: {
+        params: {
+          name: joi.string()
+            .required()
+            .description('The username for \'it\'.')
+        }
+      }
+    }
+  })
+
+  server.route({
+    method: 'POST',
+    path: '/user/{name}/public',
+    config: {
+      handler: userPub,
+      description: 'Userfull',
+      tags: ['user'],
+      validate: {
+        payload: {
+          publicUser: joi.boolean()
+            .required()
+        },
         params: {
           name: joi.string()
             .required()

@@ -8,7 +8,27 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation.min.js"></script>
 <script>
 $(function () {
+  var makeUserPublicEl = $('#make-user-public')
   $(document).foundation()
+  if (makeUserPublicEl && makeUserPublicEl.parent('.switch') && makeUserPublicEl.parent('.switch').prev()) {
+    makeUserPublicEl.parent('.switch').prev().on('click', function (ev) { makeUserPublicEl.click() })
+    makeUserPublicEl.on('change', function (ev) {
+      var $self = $(this)
+      var $next = $self.parent('.switch').prev()
+      $next.addClass('warning')
+      var name = $self.attr('name')
+      var publicUser = $self.prop('checked')
+      $.post(`/user/${name}/public`, { publicUser: publicUser }, function (data, status) {
+        $next.removeClass('alert')
+        $next.text(publicUser ? 'Profil public' : 'Profil privé')
+      })
+        .always(function () { $next.removeClass('warning') })
+        .fail(function () {
+          $self.prop('checked', !$self.prop('checked'))
+          $next.addClass('alert')
+        })
+    })
+  }
 })
 </script>
 </body>

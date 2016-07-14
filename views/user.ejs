@@ -4,7 +4,26 @@
 <h1><%= user.name %></h1>
 <p class="lead">Voir le profil <a href="https://github.com/<%= user.name %>"><%= user.name %> chez Github</a>.</p>
 <% if (me) { %>
-<p>Hello, <a href="/user/<%- user.name%>"><%= user.name %></a>!</p>
+<div class="row">
+  <div class="column medium-6">
+    <p>Hello, <a href="/user/<%- user.name%>"><%= user.name %></a>!</p>
+    <p><a href="/user/<%= user.name %>/full">Full</a></p>
+  </div>
+  <div class="column medium-6">
+    <form>
+      <fieldset>
+        <legend title="Rendre le profil privé ou public?" class="label"><%= user.public ? 'Profil public' : 'Profil privé' %></legend>
+        <div class="switch">
+          <input aria-describedby="publichelp" class="switch-input" id="make-user-public" type="checkbox" name="<%= user.name %>"<%= user.public ? ' checked' : '' %>>
+          <label title="Rendre le profil privé ou public?" class="switch-paddle" for="make-user-public">
+            <span class="show-for-sr">Rendre le profil privé ou public?</span>
+          </label>
+          <p class="help-text" id="publichelp">Pendant la période de rodage, les profils ne sont visibles qu'aux autres utilisateurs du site, à moins que vous ne le rendiez public ici.</p>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
 <% } %>
 
 <% if (user && user.raw) { %>
@@ -15,8 +34,6 @@
 <pre>
 <%= JSON.stringify(user, null, ' ') %>
 </pre>
-<% } else if (user && credentials && typeof credentials === 'object' && credentials.username && user.name && user.name === credentials.username) { %>
-<p><a href="/user/<%= user.name %>/full">Full</a></p>
 <% } %>
 <% if (streaks) {
   const gg = streaks.find((el) => el.current && el.commits.length > 1)
