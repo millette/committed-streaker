@@ -45,7 +45,6 @@
     "inert": "^4.0.0",
     "joi": "^8.4.2",
     "lodash.pick": "^4.2.1",
-    "lodash.shuffle": "^4.0.0",
     "lout": "^9.0.1",
     "nano": "^6.2.0",
     "rejoice": "^3.2.0",
