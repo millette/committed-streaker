@@ -65,7 +65,7 @@ const dailySome = dailyUpdates.bind(null, { descending: true, endkey: 6 }) // 50
 const dailyWorked = dailyUpdates.bind(null, { descending: true, endkey: 75 }) // 200-400
 const dailyZero = dailyUpdates.bind(null, { endkey: 75 }) // 4000
 
-// dailyWorked()
-setTimeout(() => setInterval(dailySome, utils.dayUnit), 4 * utils.dayUnit / 24)
+dailySome()
+setTimeout(() => setInterval(dailySome, utils.dayUnit), 22 * utils.dayUnit / 24)
 setInterval(dailyWorked, utils.dayUnit / 4)
 setInterval(dailyZero, utils.dayUnit * 7)
