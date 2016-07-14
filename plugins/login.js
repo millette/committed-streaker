@@ -332,7 +332,7 @@ const after = (options, server, next) => {
             .integer()
             .min(0)
             .max(500)
-            .default(25)
+            .default(20)
         }
       }
     }
@@ -366,7 +366,7 @@ const after = (options, server, next) => {
             .integer()
             .min(0)
             .max(500)
-            .default(25)
+            .default(20)
         }
       }
     }
@@ -378,7 +378,6 @@ const after = (options, server, next) => {
 const userChanges = () => {
   const usersFeed = utils.userDB.follow({ include_docs: true, since: 'now' })
   usersFeed.on('change', (change) => {
-    // debug('1) CHANGE %s', Object.keys(change).join(', '))
     if (change.doc && change.doc.contribs) { return }
     if (change.delete) { return }
     if (change.id.indexOf('_design/') === 0) { return }
