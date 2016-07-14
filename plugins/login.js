@@ -90,7 +90,6 @@ const daily = (request, reply) => {
     startkey: [request.params.year, request.params.month, request.params.day + 1],
     endkey: [request.params.year, request.params.month, request.params.day]
   }
-  // if (request.params.limit) { options.limit = request.params.limit }
   utils.userDB.view('app', 'commitsByDate', options, (err, body) => {
     if (err) {
       debug('dbview error: %s', err)
@@ -125,9 +124,15 @@ const daily = (request, reply) => {
 const userImp = (me, request, reply) => {
   const username = me
     ? request.auth.credentials.username
-    : request.params.name || 'millette'
+    : request.params.name
+
   return utils.getUser(username)
   .then((body) => {
+    if (!me && !(request.auth.credentials && request.auth.credentials.username) && !body.public) {
+      const e = new Error(`Profile ${username} is not public.`)
+      e.private = true
+      return Promise.reject(e)
+    }
     const cc = []
     let r
     for (r in body.contribs) {
@@ -164,6 +169,9 @@ const userImp = (me, request, reply) => {
       .etag(x[0]._rev)
   })
   .catch((err) => {
+    if (err.private) {
+      return reply(boom.unauthorized('Authentication failed: ' + err))
+    }
     debug('get user %s not found: %s', username, err)
     return reply(boom.notFound(err, { username }))
   })
@@ -199,10 +207,6 @@ const userPub = (request, reply) => {
   if (request.auth.credentials.username !== request.params.name) {
     return reply(boom.unauthorized(`Authentication failed: '${request.auth.credentials.username}' !== '${request.params.name}'`))
   }
-  // get the user
-  // set public field (true/false)
-  // save user
-  // reply accordingly
   const username = request.params.name
 
   utils.getUser(username)
@@ -297,27 +301,16 @@ const after = (options, server, next) => {
     method: 'GET',
     path: '/user/{name}',
     config: {
+      auth: { mode: 'try' },
       handler: user,
       description: 'User sweet home (desc)',
       tags: ['user'],
       validate: {
         params: {
-          name: joi.string()
-            .required()
+          name: joi.string().required()
             .description('The username for \'it\'.')
         }
       }
-    }
-  })
-
-  server.route({
-    method: 'GET',
-    path: '/user/millette',
-    config: {
-      auth: { mode: 'try' },
-      handler: user,
-      description: 'User millette (desc)',
-      tags: ['user']
     }
   })
 
@@ -330,8 +323,7 @@ const after = (options, server, next) => {
       tags: ['user'],
       validate: {
         params: {
-          name: joi.string()
-            .required()
+          name: joi.string().required()
             .description('The username for \'it\'.')
         }
       }
@@ -347,12 +339,10 @@ const after = (options, server, next) => {
       tags: ['user'],
       validate: {
         payload: {
-          publicUser: joi.boolean()
-            .required()
+          publicUser: joi.boolean().required()
         },
         params: {
-          name: joi.string()
-            .required()
+          name: joi.string().required()
             .description('The username for \'it\'.')
         }
       }
@@ -369,11 +359,7 @@ const after = (options, server, next) => {
       tags: ['commits'],
       validate: {
         params: {
-          limit: joi.number()
-            .integer()
-            .min(0)
-            .max(500)
-            .default(20)
+          limit: joi.number().integer().min(0).max(500).default(20)
         }
       }
     }
@@ -388,26 +374,10 @@ const after = (options, server, next) => {
       tags: ['commits'],
       validate: {
         params: {
-          year: joi.number()
-            .integer()
-            .min(2000)
-            .max(2020)
-            .required(),
-          month: joi.number()
-            .integer()
-            .min(1)
-            .max(12)
-            .required(),
-          day: joi.number()
-            .integer()
-            .min(1)
-            .max(31)
-            .required(),
-          limit: joi.number()
-            .integer()
-            .min(0)
-            .max(500)
-            .default(20)
+          year: joi.number().integer().min(2000).max(2020).required(),
+          month: joi.number().integer().min(1).max(12).required(),
+          day: joi.number().integer().min(1).max(31).required(),
+          limit: joi.number().integer().min(0).max(500).default(20)
         }
       }
     }
