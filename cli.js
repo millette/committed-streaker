@@ -40,7 +40,7 @@ const dailyUpdates = (options) => utils.userDB.view(
   (err, body) => {
     if (err) { return debug('dailyUpdates error: %s', err) }
     const data = body.rows
-    const delay = 500
+    const delay = 400
 
     data.forEach((r, k) => {
       debug('setup contrib updates for %s', r.id)
@@ -66,6 +66,6 @@ const dailyWorked = dailyUpdates.bind(null, { descending: true, endkey: 75 }) //
 const dailyZero = dailyUpdates.bind(null, { endkey: 75 }) // 4000
 
 dailySome()
-setTimeout(() => setInterval(dailySome, utils.dayUnit), 22 * utils.dayUnit / 24)
-setInterval(dailyWorked, utils.dayUnit / 4)
-setInterval(dailyZero, utils.dayUnit * 7)
+setTimeout(() => setInterval(dailySome, utils.dayUnit / 7), utils.dayUnit / 7)
+setInterval(dailyWorked, utils.dayUnit / 24)
+setInterval(dailyZero, utils.dayUnit)
