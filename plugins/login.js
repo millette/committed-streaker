@@ -375,27 +375,8 @@ const after = (options, server, next) => {
   next()
 }
 
-const userChanges = () => {
-  const usersFeed = utils.userDB.follow({ include_docs: true, since: 'now' })
-  usersFeed.on('change', (change) => {
-    if (change.doc && change.doc.contribs) { return }
-    if (change.delete) { return }
-    if (change.id.indexOf('_design/') === 0) { return }
-    debug('2) CHANGE %s %s', change.id, change.seq)
-    utils.fetchContribs(change.doc.name)
-      .then((contribs) => {
-        change.doc.contribs = contribs
-        utils.putUser(change.doc)
-          .then((body) => debug('BODY %s %s', body.id, body.rev))
-          .catch((err) => debug('insert user contribs error: %s', err))
-      })
-  })
-  usersFeed.follow()
-}
-
 exports.register = (server, options, next) => {
   debug('register...')
-  userChanges()
   server.ext('onPreResponse', preResponse)
   server.dependency(['hapi-auth-cookie', 'bell', 'hapi-context-credentials', 'vision', 'visionary'], after.bind(null, options))
   next()

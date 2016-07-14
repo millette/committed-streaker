@@ -9,6 +9,24 @@ const debug = require('debug')('yummy')
 // self
 const utils = require('./lib/utils')
 
+const userChanges = () => {
+  const usersFeed = utils.userDB.follow({ include_docs: true, since: 'now' })
+  usersFeed.on('change', (change) => {
+    if (change.doc && change.doc.contribs) { return }
+    if (change.delete) { return }
+    if (change.id.indexOf('_design/') === 0) { return }
+    debug('2) CHANGE %s %s', change.id, change.seq)
+    utils.fetchContribs(change.doc.name)
+      .then((contribs) => {
+        change.doc.contribs = contribs
+        utils.putUser(change.doc)
+          .then((body) => debug('BODY %s %s', body.id, body.rev))
+          .catch((err) => debug('insert user contribs error: %s', err))
+      })
+  })
+  usersFeed.follow()
+}
+
 const dailyUpdates = (options) => utils.userDB.view(
   'app', 'probs', options || { descending: true },
   (err, body) => {
@@ -39,6 +57,7 @@ const dailySome = dailyUpdates.bind(null, { descending: true, endkey: 6 }) // 50
 const dailyWorked = dailyUpdates.bind(null, { descending: true, endkey: 75 }) // 200-400
 const dailyZero = dailyUpdates.bind(null, { endkey: 75 }) // 4000
 
+userChanges()
 dailySome()
 setTimeout(() => setInterval(dailySome, utils.dayUnit / 7), utils.dayUnit / 7)
 setInterval(dailyWorked, utils.dayUnit / 20)
