@@ -31,7 +31,7 @@ const dailyUpdates = (options) => utils.userDB.view(
   'app', 'probs', options || { descending: true },
   (err, body) => {
     if (err) { return debug('dailyUpdates error: %s', err) }
-    const data = sample(body.rows, Math.floor(body.rows.length / 2))
+    const data = sample(body.rows, Math.floor(body.rows.length / 4))
     const delay = 600
 
     data.forEach((r, k) => {
@@ -59,6 +59,6 @@ const dailyZero = dailyUpdates.bind(null, { endkey: 75 }) // 4000
 
 userChanges()
 dailySome()
-setTimeout(() => setInterval(dailySome, utils.dayUnit / 7), utils.dayUnit / 7)
-setInterval(dailyWorked, utils.dayUnit / 20)
+setTimeout(() => setInterval(dailySome, utils.dayUnit / 13), utils.dayUnit / 13)
+setInterval(dailyWorked, utils.dayUnit / 31)
 setInterval(dailyZero, utils.dayUnit)
