@@ -173,36 +173,25 @@ const me = userImp.bind(null, true)
 
 const preResponse = (request, reply) => {
   if (!request.response.isBoom) { return reply.continue() }
-  switch (request.response.output.payload.statusCode) {
-    case 401:
-      reply.view('401', {
-        credentials: false,
-        app: request.server.settings.app,
-        output: request.response.output.payload
-      })
-      break
-
-    case 404:
-      reply.view('404', {
-        app: request.server.settings.app,
-        output: request.response.output.payload
-      })
-      break
-
-    default:
-      reply.view('error', {
-        credentials: false,
-        app: request.server.settings.app,
-        output: request.response.output.payload
-      })
-  }
-  /*
-  return reply.view('error', {
+  const code = request.response.output.payload.statusCode || 500
+  const obj = {
     credentials: false,
     app: request.server.settings.app,
     output: request.response.output.payload
-  })
-  */
+  }
+  let view
+
+  switch (code) {
+    case 400:
+    case 401:
+    case 404:
+      view = `${code}`
+      break
+
+    default:
+      view = 'error'
+  }
+  reply.view(view, obj).code(code)
 }
 
 const after = (options, server, next) => {
@@ -340,6 +329,9 @@ const after = (options, server, next) => {
       validate: {
         params: {
           limit: joi.number()
+            .integer()
+            .min(0)
+            .max(500)
             .default(25)
         }
       }
@@ -356,12 +348,24 @@ const after = (options, server, next) => {
       validate: {
         params: {
           year: joi.number()
+            .integer()
+            .min(2000)
+            .max(2020)
             .required(),
           month: joi.number()
+            .integer()
+            .min(1)
+            .max(12)
             .required(),
           day: joi.number()
+            .integer()
+            .min(1)
+            .max(31)
             .required(),
           limit: joi.number()
+            .integer()
+            .min(0)
+            .max(500)
             .default(25)
         }
       }
