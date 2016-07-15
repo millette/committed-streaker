@@ -3,6 +3,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/millette/committed-streaker/badge.svg?branch=master)](https://coveralls.io/github/millette/committed-streaker?branch=master)
 [![Dependency Status](https://gemnasium.com/badges/github.com/millette/committed-streaker.svg)](https://gemnasium.com/github.com/millette/committed-streaker)
 
+[![Support](https://supporterhq.com/api/b/w21k8k2lj3s5ssc6rbp98ez7/committed-streaker)](https://supporterhq.com/support/w21k8k2lj3s5ssc6rbp98ez7/committed-streaker)
+
 > Bringing the streakers back since 2016
 
 ## Required environment variables
